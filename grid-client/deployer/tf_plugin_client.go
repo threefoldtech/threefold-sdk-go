@@ -7,6 +7,7 @@ import (
 	"io"
 	baseLog "log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -274,7 +275,7 @@ func NewTFPluginClient(
 	tfPluginClient.TwinID = twinID
 
 	// make sure the account used is verified we have the user public key in bytes(pkBytes)
-	if getTwinVerificationState(twinID) != "VERIFIED" {
+	if getTwinVerificationState(twinID, tfPluginClient.Network) != "VERIFIED" {
 		return TFPluginClient{}, fmt.Errorf("can not run deployments for unverified user, please visit https://dashboard.grid.tf/ to verify your account")
 	}
 
@@ -355,9 +356,16 @@ func generateSessionID() string {
 }
 
 // make sure the account used is verified we have the user public key in bytes(pkBytes)
-func getTwinVerificationState(twinID uint32) (status string) {
-	verificationServiceURL := "https://kyc1.gent01.dev.grid.tf/api/v1/status"
+func getTwinVerificationState(twinID uint32, network string) (status string) {
 	status = "FAILED"
+	verificationServiceURL, err := url.JoinPath(KycURLs[network], "/api/v1/status")
+	if err != nil {
+		return
+	}
+
+	if len(verificationServiceURL) == 0 {
+		return "VERIFIED"
+	}
 
 	request, err := http.NewRequest(http.MethodGet, verificationServiceURL, nil)
 	if err != nil {
@@ -365,7 +373,7 @@ func getTwinVerificationState(twinID uint32) (status string) {
 	}
 
 	q := request.URL.Query()
-	q.Set("twinID", fmt.Sprint(twinID))
+	q.Set("twin_id", fmt.Sprint(twinID))
 	request.URL.RawQuery = q.Encode()
 
 	cl := &http.Client{
@@ -383,15 +391,22 @@ func getTwinVerificationState(twinID uint32) (status string) {
 		return
 	}
 
-	bodyMap := map[string]string{}
-	err = json.Unmarshal(body, &bodyMap)
+	var result struct {
+		Result struct {
+			Status string `json:"status"`
+		} `json:"result"`
+		Error string `json:"error"`
+	}
+
+	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return
 	}
 
 	if response.StatusCode != http.StatusOK {
-		log.Error().Msgf("failed to verify user status: %s", bodyMap["error"])
+		log.Error().Msgf("failed to verify user status: %s", result.Error)
 		return
 	}
-	return bodyMap["status"]
+
+	return result.Result.Status
 }

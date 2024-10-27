@@ -93,4 +93,11 @@ var (
 			"wss://relay.02.grid.tf",
 		},
 	}
+
+	KycURLs = map[string]string{
+		DevNetwork:  "",
+		TestNetwork: "",
+		QaNetwork:   "",
+		MainNetwork: "https://kyc1.gent01.dev.grid.tf",
+	}
 )
