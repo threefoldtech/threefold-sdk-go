@@ -358,13 +358,14 @@ func generateSessionID() string {
 // make sure the account used is verified we have the user public key in bytes(pkBytes)
 func getTwinVerificationState(twinID uint32, network string) (status string) {
 	status = "FAILED"
-	verificationServiceURL, err := url.JoinPath(KycURLs[network], "/api/v1/status")
-	if err != nil {
-		return
+	kycURL := KycURLs[network]
+	if len(kycURL) == 0 {
+		return "VERIFIED"
 	}
 
-	if len(verificationServiceURL) == 0 {
-		return "VERIFIED"
+	verificationServiceURL, err := url.JoinPath(kycURL, "/api/v1/status")
+	if err != nil {
+		return
 	}
 
 	request, err := http.NewRequest(http.MethodGet, verificationServiceURL, nil)
