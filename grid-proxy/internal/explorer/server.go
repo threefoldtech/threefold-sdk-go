@@ -430,7 +430,7 @@ func (a *App) listContracts(r *http.Request) (interface{}, mw.Response) {
 // @Success 200 {object} []types.PublicIP
 // @Failure 400 {object} string
 // @Failure 500 {object} string
-// @Router /ips [get]
+// @Router /public_ips [get]
 func (a *App) GetPublicIps(r *http.Request) (interface{}, mw.Response) {
 	filter := types.PublicIpFilter{}
 	limit := types.DefaultLimit()
