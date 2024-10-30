@@ -278,13 +278,13 @@ func NewTFPluginClient(
 	// make sure the account used is verified
 	check := func() error {
 		if !isTwinVerified(twinID, tfPluginClient.Network) {
-			return fmt.Errorf("user is not verified")
+			return fmt.Errorf("user with twin id %d is not verified", twinID)
 		}
 		return nil
 	}
 
 	if err := backoff.Retry(check, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 5)); err != nil {
-		return TFPluginClient{}, fmt.Errorf("can not run deployments for unverified user, please visit https://dashboard.grid.tf/ to verify your account")
+		return TFPluginClient{}, errors.Wrapf(err, "only verified users can deploy, please visit https://dashboard.grid.tf/ to verify your account")
 	}
 
 	tfPluginClient.useRmbProxy = true
