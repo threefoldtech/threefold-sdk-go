@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -274,8 +275,15 @@ func NewTFPluginClient(
 	}
 	tfPluginClient.TwinID = twinID
 
-	// make sure the account used is verified we have the user public key in bytes(pkBytes)
-	if getTwinVerificationState(twinID, tfPluginClient.Network) != "VERIFIED" {
+	// make sure the account used is verified
+	check := func() error {
+		if !isTwinVerified(twinID, tfPluginClient.Network) {
+			return fmt.Errorf("user is not verified")
+		}
+		return nil
+	}
+
+	if err := backoff.Retry(check, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 5)); err != nil {
 		return TFPluginClient{}, fmt.Errorf("can not run deployments for unverified user, please visit https://dashboard.grid.tf/ to verify your account")
 	}
 
@@ -355,15 +363,11 @@ func generateSessionID() string {
 	return fmt.Sprintf("tf-%d", os.Getpid())
 }
 
-// make sure the account used is verified we have the user public key in bytes(pkBytes)
-func getTwinVerificationState(twinID uint32, network string) (status string) {
-	status = "FAILED"
-	kycURL := KycURLs[network]
-	if len(kycURL) == 0 {
-		return "VERIFIED"
-	}
+// isTwinVerified makes sure the twin used is verified
+func isTwinVerified(twinID uint32, net string) (verified bool) {
+	const verifiedStatus = "VERIFIED"
 
-	verificationServiceURL, err := url.JoinPath(kycURL, "/api/v1/status")
+	verificationServiceURL, err := url.JoinPath(KycURLs[net], "/api/v1/status")
 	if err != nil {
 		return
 	}
@@ -387,27 +391,17 @@ func getTwinVerificationState(twinID uint32, network string) (status string) {
 	}
 	defer response.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
-
-	var result struct {
-		Result struct {
-			Status string `json:"status"`
-		} `json:"result"`
-		Error string `json:"error"`
-	}
-
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return
-	}
-
 	if response.StatusCode != http.StatusOK {
-		log.Error().Msgf("failed to verify user status: %s", result.Error)
+		log.Error().Msg("failed to get user status")
 		return
 	}
 
-	return result.Result.Status
+	var result struct{ Result struct{ Status string } }
+
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		return
+	}
+
+	return result.Result.Status == verifiedStatus
 }

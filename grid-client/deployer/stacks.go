@@ -95,9 +95,9 @@ var (
 	}
 
 	KycURLs = map[string]string{
-		DevNetwork:  "",
-		TestNetwork: "",
-		QaNetwork:   "",
-		MainNetwork: "https://kyc1.gent01.dev.grid.tf",
+		DevNetwork:  "https://kyc.dev.grid.tf ",
+		TestNetwork: "https://kyc.test.grid.tf",
+		QaNetwork:   "https://kyc.qa.grid.tf",
+		MainNetwork: "https://kyc.grid.tf",
 	}
 )
