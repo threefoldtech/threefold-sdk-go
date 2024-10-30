@@ -277,7 +277,9 @@ func NewTFPluginClient(
 
 	// make sure the account used is verified
 	check := func() error {
-		if !isTwinVerified(twinID, tfPluginClient.Network) {
+		if ok, err := isTwinVerified(twinID, tfPluginClient.Network); err != nil {
+			return err
+		} else if !ok {
 			return fmt.Errorf("user with twin id %d is not verified", twinID)
 		}
 		return nil
@@ -364,7 +366,7 @@ func generateSessionID() string {
 }
 
 // isTwinVerified makes sure the twin used is verified
-func isTwinVerified(twinID uint32, net string) (verified bool) {
+func isTwinVerified(twinID uint32, net string) (verified bool, err error) {
 	const verifiedStatus = "VERIFIED"
 
 	verificationServiceURL, err := url.JoinPath(KycURLs[net], "/api/v1/status")
@@ -392,8 +394,7 @@ func isTwinVerified(twinID uint32, net string) (verified bool) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		log.Error().Msg("failed to get user status")
-		return
+		return verified, errors.New("failed to get twin verification status")
 	}
 
 	var result struct{ Result struct{ Status string } }
@@ -403,5 +404,5 @@ func isTwinVerified(twinID uint32, net string) (verified bool) {
 		return
 	}
 
-	return result.Result.Status == verifiedStatus
+	return result.Result.Status == verifiedStatus, nil
 }
