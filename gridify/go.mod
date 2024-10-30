@@ -21,6 +21,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.12 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
