@@ -17,11 +17,17 @@ import (
 )
 
 func TestParseConfig(t *testing.T) {
+	mnemonic := os.Getenv("MNEMONICS")
+	log.Debug().Str("MNEMONICS", mnemonic).Send()
+	if len(mnemonic) == 0 {
+		mnemonic = "//Alice"
+	}
+
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	validFlist := "https://hub.grid.tf/tf-official-apps/base:latest.flist"
 
 	// Alice identity
-	aliceIdentity, err := substrate.NewIdentityFromSr25519Phrase("//Alice")
+	aliceIdentity, err := substrate.NewIdentityFromSr25519Phrase(mnemonic)
 	assert.NoError(t, err)
 
 	keyPair, err := aliceIdentity.KeyPair()

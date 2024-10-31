@@ -29,14 +29,21 @@ var (
 )
 
 func setup() (TFPluginClient, error) {
+	mnemonic := os.Getenv("MNEMONICS")
+	log.Debug().Str("MNEMONICS", mnemonic).Send()
+	if len(mnemonic) == 0 {
+		mnemonic = "//Alice"
+	}
+
 	network := os.Getenv("NETWORK")
 	if len(network) == 0 {
 		network = "dev"
 	}
+
 	log.Debug().Msgf("network: %s", network)
 
 	// Alice identity
-	aliceIdentity, err := substrate.NewIdentityFromSr25519Phrase("//Alice")
+	aliceIdentity, err := substrate.NewIdentityFromSr25519Phrase(mnemonic)
 	if err != nil {
 		return TFPluginClient{}, err
 	}
