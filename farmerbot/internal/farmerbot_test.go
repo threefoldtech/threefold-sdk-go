@@ -2,11 +2,13 @@ package internal
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	substrate "github.com/threefoldtech/tfchain/clients/tfchain-client-go"
 	"github.com/threefoldtech/tfgrid-sdk-go/farmerbot/mocks"
@@ -41,7 +43,13 @@ func TestFarmerbot(t *testing.T) {
 		}},
 	}
 
-	farmerbot, err := NewFarmerBot(ctx, inputs, "dev", aliceSeed, peer.KeyTypeSr25519)
+	mnemonic := os.Getenv("MNEMONICS")
+	log.Debug().Str("MNEMONICS", mnemonic).Send()
+	if len(mnemonic) == 0 {
+		mnemonic = aliceSeed
+	}
+
+	farmerbot, err := NewFarmerBot(ctx, inputs, "dev", mnemonic, peer.KeyTypeSr25519)
 	assert.Error(t, err)
 	farmerbot.rmbNodeClient = rmb
 	farmerbot.gridProxyClient = proxy
@@ -63,7 +71,7 @@ func TestFarmerbot(t *testing.T) {
 	})
 
 	t.Run("test serve", func(t *testing.T) {
-		farmerbot.substrateManager = substrate.NewManager(SubstrateURLs[DevNetwork]...)
+		farmerbot.substrateManager = substrate.NewManager(SubstrateURLs[QaNetwork]...)
 		identity, err := substrate.NewIdentityFromSr25519Phrase(aliceSeed)
 		assert.NoError(t, err)
 		farmerbot.identity = identity
