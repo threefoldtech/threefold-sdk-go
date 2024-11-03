@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/sethvargo/go-retry"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/workloads"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/zos"
 )
@@ -276,17 +278,24 @@ func (d *DeploymentDeployer) calculateNetworksUsedIPs(ctx context.Context, dls [
 		wg.Add(1)
 		go func(dl *workloads.Deployment) {
 			defer wg.Done()
-			usedHostIDs, err := d.getUsedHostIDsOfNodeWithinNetwork(ctx, dl.NodeID, dl.NetworkName)
-			if err != nil {
+			check := func(context.Context) error {
+				usedHostIDs, err := d.getUsedHostIDsOfNodeWithinNetwork(ctx, dl.NodeID, dl.NetworkName)
+				if err != nil {
+					err = errors.Wrapf(err, "failed to get used host ids for network %s node %d", dl.NetworkName, dl.NodeID)
+					log.Debug().Err(err).Send()
+					return err
+				}
 				mu.Lock()
 				defer mu.Unlock()
-				errs = multierror.Append(errs, errors.Wrapf(err, "failed to get used host ids for network %s node %d", dl.NetworkName, dl.NodeID))
+				usedHosts[dl.NetworkName][dl.NodeID] = append(usedHosts[dl.NetworkName][dl.NodeID], usedHostIDs...)
+				return nil
+			}
+			if err := retry.Do(ctx, retry.WithMaxRetries(5, retry.NewConstant(1*time.Nanosecond)), check); err != nil {
+				mu.Lock()
+				defer mu.Unlock()
+				errs = multierror.Append(errs, err)
 				return
 			}
-
-			mu.Lock()
-			defer mu.Unlock()
-			usedHosts[dl.NetworkName][dl.NodeID] = append(usedHosts[dl.NetworkName][dl.NodeID], usedHostIDs...)
 		}(dl)
 	}
 
