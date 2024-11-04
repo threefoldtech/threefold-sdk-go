@@ -2,12 +2,16 @@ package deployer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	baseLog "log"
+	"net/http"
+	"net/url"
 	"os"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -271,6 +275,20 @@ func NewTFPluginClient(
 	}
 	tfPluginClient.TwinID = twinID
 
+	// make sure the account used is verified
+	check := func() error {
+		if ok, err := isTwinVerified(twinID, tfPluginClient.Network); err != nil {
+			return err
+		} else if !ok {
+			return fmt.Errorf("user with twin id %d is not verified", twinID)
+		}
+		return nil
+	}
+
+	if err := backoff.Retry(check, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 5)); err != nil {
+		return TFPluginClient{}, errors.Wrapf(err, "only verified users can deploy, please visit https://dashboard.grid.tf/ to verify your account")
+	}
+
 	tfPluginClient.useRmbProxy = true
 	// if tfPluginClient.useRmbProxy
 	sessionID := generateSessionID()
@@ -345,4 +363,46 @@ func (t *TFPluginClient) BatchCancelContract(contracts []uint64) error {
 
 func generateSessionID() string {
 	return fmt.Sprintf("tf-%d", os.Getpid())
+}
+
+// isTwinVerified makes sure the twin used is verified
+func isTwinVerified(twinID uint32, net string) (verified bool, err error) {
+	const verifiedStatus = "VERIFIED"
+
+	verificationServiceURL, err := url.JoinPath(KycURLs[net], "/api/v1/status")
+	if err != nil {
+		return
+	}
+
+	request, err := http.NewRequest(http.MethodGet, verificationServiceURL, nil)
+	if err != nil {
+		return
+	}
+
+	q := request.URL.Query()
+	q.Set("twin_id", fmt.Sprint(twinID))
+	request.URL.RawQuery = q.Encode()
+
+	cl := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	response, err := cl.Do(request)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return verified, errors.New("failed to get twin verification status")
+	}
+
+	var result struct{ Result struct{ Status string } }
+
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		return
+	}
+
+	return result.Result.Status == verifiedStatus, nil
 }

@@ -398,8 +398,8 @@ func (f *FarmerBot) shouldWakeUp(ctx context.Context, node *node, roundStart tim
 	}
 
 	lastTimeNodeUpdatedAt := time.Unix(proxyNode.UpdatedAt, 0)
-	if time.Since(lastTimeNodeUpdatedAt) > 24*time.Hour {
-		// if the last time the node was awake was before 24 hours ago
+	if time.Since(lastTimeNodeUpdatedAt) > 23*time.Hour {
+		// if the last time the node was awake was before 23 hours ago (One hour to account for DST transitions)
 		log.Warn().Uint32("nodeID", uint32(node.ID)).Msgf("Node didn't wake up since %v hours", math.Floor(time.Since(lastTimeNodeUpdatedAt).Hours()))
 		log.Info().Uint32("nodeID", uint32(node.ID)).Msg("Urgent wake up")
 		node.lastTimePeriodicWakeUp = time.Now()
