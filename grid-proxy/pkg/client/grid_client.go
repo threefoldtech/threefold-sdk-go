@@ -388,10 +388,17 @@ func (g *Clientimpl) PublicIps(ctx context.Context, filter types.PublicIpFilter,
 }
 
 func isTimeoutError(err error) bool {
-	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
 		return true
 	}
-	return strings.Contains(err.Error(), "net/http: timeout awaiting response headers")
+
+	var urlErr url.Error
+	if errors.As(err, &urlErr) && urlErr.Timeout() {
+		return true
+	}
+
+	return strings.Contains(err.Error(), "timeout awaiting response headers")
 }
 
 func (g *Clientimpl) newHTTPClient() *http.Client {
