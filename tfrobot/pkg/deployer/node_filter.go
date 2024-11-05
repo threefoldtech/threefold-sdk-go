@@ -2,6 +2,8 @@ package deployer
 
 import (
 	"context"
+	"errors"
+	"slices"
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/deployer"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/zos"
@@ -39,9 +41,6 @@ func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, gr
 	if group.PublicIP6 {
 		filter.IPv6 = &group.PublicIP6
 	}
-	if !group.PublicIP4 && !group.PublicIP6 && !yggExistsInVms {
-		filter.Features = []string{zos.NetworkLightType, zos.ZMachineLightType}
-	}
 	if group.Dedicated {
 		filter.Dedicated = &group.Dedicated
 	}
@@ -53,8 +52,15 @@ func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, gr
 	if group.FreeHRU == 0 {
 		freeHDD = nil
 	}
+	if !group.PublicIP4 && !group.PublicIP6 && !yggExistsInVms {
+		filter.Features = []string{zos.NetworkLightType, zos.ZMachineLightType}
+	}
 
 	nodes, err := deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
+	if slices.Contains(filter.Features, zos.NetworkLightType) && errors.Is(err, deployer.ErrNoNodesMatchesResources) {
+		filter.Features = []string{}
+		nodes, err = deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
+	}
 	if err != nil {
 		return []int{}, err
 	}
