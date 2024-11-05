@@ -3,14 +3,18 @@ package deployer
 import (
 	"context"
 	"errors"
-	"slices"
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/deployer"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/zos"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 )
 
-func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, group NodesGroup, excludedNodes []uint64, yggExistsInVms bool) ([]int, error) {
+func filterNodes(ctx context.Context,
+	tfPluginClient deployer.TFPluginClient,
+	group NodesGroup,
+	excludedNodes []uint64,
+	yggOrWgExistsInVms bool,
+) (nodesIDs []int, isLight bool, err error) {
 	filter := types.NodeFilter{}
 	filter.Excluded = excludedNodes
 
@@ -52,25 +56,26 @@ func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, gr
 	if group.FreeHRU == 0 {
 		freeHDD = nil
 	}
-	if !group.PublicIP4 && !group.PublicIP6 && !yggExistsInVms {
+	if !group.PublicIP4 && !group.PublicIP6 && !yggOrWgExistsInVms {
+		isLight = true
 		filter.Features = []string{zos.NetworkLightType, zos.ZMachineLightType}
 	}
 
 	nodes, err := deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
-	if slices.Contains(filter.Features, zos.NetworkLightType) && errors.Is(err, deployer.ErrNoNodesMatchesResources) {
+	if isLight && errors.Is(err, deployer.ErrNoNodesMatchesResources) {
+		isLight = false
 		filter.Features = []string{}
 		nodes, err = deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
 	}
 	if err != nil {
-		return []int{}, err
+		return
 	}
 
-	nodesIDs := []int{}
 	for _, node := range nodes {
 		nodesIDs = append(nodesIDs, node.NodeID)
 	}
 
-	return nodesIDs, nil
+	return
 }
 
 func convertGBToBytes(gb uint64) uint64 {
