@@ -2,13 +2,19 @@ package deployer
 
 import (
 	"context"
+	"errors"
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/deployer"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/zos"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 )
 
-func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, group NodesGroup, excludedNodes []uint64, yggExistsInVms bool) ([]int, error) {
+func filterNodes(ctx context.Context,
+	tfPluginClient deployer.TFPluginClient,
+	group NodesGroup,
+	excludedNodes []uint64,
+	yggOrWgExistsInVms bool,
+) (nodesIDs []int, isLight bool, err error) {
 	filter := types.NodeFilter{}
 	filter.Excluded = excludedNodes
 
@@ -39,9 +45,6 @@ func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, gr
 	if group.PublicIP6 {
 		filter.IPv6 = &group.PublicIP6
 	}
-	if !group.PublicIP4 && !group.PublicIP6 && !yggExistsInVms {
-		filter.Features = []string{zos.NetworkLightType, zos.ZMachineLightType}
-	}
 	if group.Dedicated {
 		filter.Dedicated = &group.Dedicated
 	}
@@ -53,18 +56,26 @@ func filterNodes(ctx context.Context, tfPluginClient deployer.TFPluginClient, gr
 	if group.FreeHRU == 0 {
 		freeHDD = nil
 	}
-
-	nodes, err := deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
-	if err != nil {
-		return []int{}, err
+	if !group.PublicIP4 && !group.PublicIP6 && !yggOrWgExistsInVms {
+		isLight = true
+		filter.Features = []string{zos.NetworkLightType, zos.ZMachineLightType}
 	}
 
-	nodesIDs := []int{}
+	nodes, err := deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
+	if isLight && errors.Is(err, deployer.ErrNoNodesMatchesResources) {
+		isLight = false
+		filter.Features = []string{}
+		nodes, err = deployer.FilterNodes(ctx, tfPluginClient, filter, freeSSD, freeHDD, nil, group.NodesCount)
+	}
+	if err != nil {
+		return
+	}
+
 	for _, node := range nodes {
 		nodesIDs = append(nodesIDs, node.NodeID)
 	}
 
-	return nodesIDs, nil
+	return
 }
 
 func convertGBToBytes(gb uint64) uint64 {

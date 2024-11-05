@@ -123,16 +123,16 @@ func deployNodeGroup(
 	vms []Vms,
 	sshKeys map[string]string,
 ) error {
-	var ygg bool
+	var yggOrWG bool
 
 	for _, group := range vms {
-		if group.Ygg && group.NodeGroup == nodeGroup.Name {
-			ygg = true
+		if group.NodeGroup == nodeGroup.Name && (group.Ygg || group.WireGuard) {
+			yggOrWG = true
 		}
 	}
 
 	log.Info().Str("Node group", nodeGroup.Name).Msg("Filter nodes")
-	nodesIDs, err := filterNodes(ctx, tfPluginClient, nodeGroup, excludedNodes, ygg)
+	nodesIDs, isLight, err := filterNodes(ctx, tfPluginClient, nodeGroup, excludedNodes, yggOrWG)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func deployNodeGroup(
 
 	if groupDeployments.networkDeployments == nil {
 		log.Debug().Str("Node group", nodeGroup.Name).Msg("Parsing vms group")
-		*groupDeployments = parseVMsGroup(vms, nodeGroup.Name, nodesIDs, sshKeys)
+		*groupDeployments = parseVMsGroup(vms, nodeGroup.Name, nodesIDs, isLight, sshKeys)
 	} else {
 		log.Debug().Str("Node group", nodeGroup.Name).Msg("Updating vms group")
 		updateFailedDeployments(ctx, tfPluginClient, nodesIDs, groupDeployments)
@@ -175,7 +175,7 @@ func loadAfterDeployment(
 	return output, failedGroupsErr
 }
 
-func parseVMsGroup(vms []Vms, nodeGroup string, nodesIDs []int, sshKeys map[string]string) groupDeploymentsInfo {
+func parseVMsGroup(vms []Vms, nodeGroup string, nodesIDs []int, isLight bool, sshKeys map[string]string) groupDeploymentsInfo {
 	vmsOfNodeGroup := []Vms{}
 	for _, vm := range vms {
 		if vm.NodeGroup == nodeGroup {
@@ -184,7 +184,7 @@ func parseVMsGroup(vms []Vms, nodeGroup string, nodesIDs []int, sshKeys map[stri
 	}
 
 	log.Debug().Str("Node group", nodeGroup).Msg("Build deployments")
-	return buildDeployments(vmsOfNodeGroup, nodesIDs, sshKeys)
+	return buildDeployments(vmsOfNodeGroup, nodesIDs, isLight, sshKeys)
 }
 
 func updateFailedDeployments(ctx context.Context, tfPluginClient deployer.TFPluginClient, nodesIDs []int, groupDeployments *groupDeploymentsInfo) {
@@ -238,7 +238,7 @@ func massDeploy(ctx context.Context, tfPluginClient deployer.TFPluginClient, dep
 	return multiErr
 }
 
-func buildDeployments(vms []Vms, nodesIDs []int, sshKeys map[string]string) groupDeploymentsInfo {
+func buildDeployments(vms []Vms, nodesIDs []int, isLight bool, sshKeys map[string]string) groupDeploymentsInfo {
 	var vmDeployments []*workloads.Deployment
 	var networkDeployments []workloads.Network
 	var nodesIDsIdx int
@@ -255,8 +255,8 @@ func buildDeployments(vms []Vms, nodesIDs []int, sshKeys map[string]string) grou
 
 			vmName := fmt.Sprintf("%s%d", vmGroup.Name, i)
 
-			network := buildNetworkDeployment(&vmGroup, nodeID, vmName, solutionType)
-			deployment := buildDeployment(vmGroup, nodeID, network.GetName(), vmName, solutionType, sshKeys[vmGroup.SSHKey])
+			network := buildNetworkDeployment(&vmGroup, nodeID, vmName, solutionType, isLight)
+			deployment := buildDeployment(vmGroup, nodeID, network.GetName(), vmName, solutionType, sshKeys[vmGroup.SSHKey], isLight)
 
 			vmDeployments = append(vmDeployments, &deployment)
 			networkDeployments = append(networkDeployments, network)
@@ -333,13 +333,13 @@ func getBlockedNodes(groupDeployments groupDeploymentsInfo) []uint64 {
 	return blockedNodes
 }
 
-func buildDeployment(vmGroup Vms, nodeID uint32, networkName, vmName, solutionType, sshKey string) workloads.Deployment {
+func buildDeployment(vmGroup Vms, nodeID uint32, networkName, vmName, solutionType, sshKey string, isLight bool) workloads.Deployment {
 	disks, diskMounts := parseDisks(vmName, vmGroup.SSDDisks)
 	volumes, volumeMounts := parseVolumes(vmName, vmGroup.Volumes)
 
 	deployment := workloads.NewDeployment("", nodeID, solutionType, nil, networkName, disks, nil, nil, nil, nil, volumes)
 
-	if !vmGroup.WireGuard && !vmGroup.PublicIP4 && !vmGroup.PublicIP6 && !vmGroup.Ygg {
+	if isLight {
 		vm := buildVMLightDeployment(vmGroup, nodeID, vmName, networkName, sshKey, append(diskMounts, volumeMounts...))
 		deployment.VmsLight = append(deployment.VmsLight, vm)
 		deployment.Name = vm.Name
@@ -352,7 +352,7 @@ func buildDeployment(vmGroup Vms, nodeID uint32, networkName, vmName, solutionTy
 	return deployment
 }
 
-func buildNetworkDeployment(vm *Vms, nodeID uint32, name, solutionType string) workloads.Network {
+func buildNetworkDeployment(vm *Vms, nodeID uint32, name, solutionType string, isLight bool) workloads.Network {
 	if !vm.PublicIP4 && !vm.Ygg && !vm.Mycelium {
 		log.Warn().Str("vm name", name).Msg("ygg ip, mycelium ip and public IP options are false. Setting mycelium IP to true")
 		vm.Mycelium = true
@@ -369,7 +369,7 @@ func buildNetworkDeployment(vm *Vms, nodeID uint32, name, solutionType string) w
 		myceliumKeys[nodeID] = key
 	}
 
-	if !vm.WireGuard && !vm.PublicIP4 && !vm.PublicIP6 && !vm.Ygg {
+	if isLight {
 		return &workloads.ZNetLight{
 			Name:        fmt.Sprintf("%s_network", name),
 			Description: "network for mass deployment",
