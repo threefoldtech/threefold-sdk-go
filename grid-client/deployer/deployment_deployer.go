@@ -290,7 +290,7 @@ func (d *DeploymentDeployer) calculateNetworksUsedIPs(ctx context.Context, dls [
 				usedHosts[dl.NetworkName][dl.NodeID] = append(usedHosts[dl.NetworkName][dl.NodeID], usedHostIDs...)
 				return nil
 			}
-			if err := backoff.Retry(check, backoff.WithMaxRetries(backoff.NewConstantBackOff(1*time.Nanosecond), 5)); err != nil {
+			if err := backoff.Retry(check, backoff.WithMaxRetries(backoff.NewConstantBackOff(1*time.Nanosecond), 2)); err != nil {
 				mu.Lock()
 				defer mu.Unlock()
 				errs = multierror.Append(errs, err)
