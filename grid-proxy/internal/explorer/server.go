@@ -344,6 +344,7 @@ func (a *App) listTwins(r *http.Request) (interface{}, mw.Response) {
 // @Summary Show a report for user consumption
 // @Description Get a report of user spent for last hour and for lifetime
 // @Tags TwinConsumption
+// @Param twin_id path int yes "twin id"
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} []types.TwinConsumption

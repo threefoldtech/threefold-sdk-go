@@ -1579,6 +1579,14 @@ const docTemplate = `{
                     "TwinConsumption"
                 ],
                 "summary": "Show a report for user consumption",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "twin id",
+                        "name": "twin_id",
+                        "in": "path"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
