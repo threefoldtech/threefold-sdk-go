@@ -1,0 +1,14 @@
+
+services:
+  graphql:
+    build: ./cmd/graphql
+  rest:
+    build: ./cmd/rest
+  indexer:
+    build: ./cmd/indexer
+  processor:
+    build: ./cmd/processor
+  database:
+    image: postgres
+  ingester:
+    image: subsquid
