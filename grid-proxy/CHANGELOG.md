@@ -4,6 +4,14 @@ Check `/version` on any instance to know the version.
 
 ## Releases
 
+### v0.16.0
+
+---
+
+- `fix` null sum in workloads_number
+- `fix` timeout error checks for shuffling stacks
+- `fix` update node features validation
+
 ### v0.15.18
 
 ---
