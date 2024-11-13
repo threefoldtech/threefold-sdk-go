@@ -197,9 +197,8 @@ func (g *GridProxyMockClient) Nodes(ctx context.Context, filter types.NodeFilter
 		return res[i].NodeID < res[j].NodeID
 	})
 
-	if filter.AvailableFor != nil {
+	if filter.AvailableFor != nil || filter.RentableOrRentedBy != nil {
 		sort.Slice(res, func(i, j int) bool {
-
 			return g.data.NodeRentContractID[uint64(res[i].NodeID)] != 0
 		})
 	}

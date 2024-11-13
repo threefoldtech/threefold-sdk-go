@@ -273,8 +273,8 @@ func (g *GridProxyMockClient) Contract(ctx context.Context, contractID uint32) (
 			Type:       "rent",
 			Details: types.RentContractDetails{
 				NodeID:   uint(rentContract.NodeID),
-				FarmId:   g.data.Nodes[nodeContract.NodeID].FarmID,
-				FarmName: g.data.Farms[g.data.Nodes[nodeContract.NodeID].FarmID].Name,
+				FarmId:   g.data.Nodes[rentContract.NodeID].FarmID,
+				FarmName: g.data.Farms[g.data.Nodes[rentContract.NodeID].FarmID].Name,
 			},
 		}, err
 	}

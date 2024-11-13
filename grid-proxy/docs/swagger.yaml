@@ -1512,6 +1512,11 @@ paths:
       consumes:
       - application/json
       description: Get a report of user spent for last hour and for lifetime
+      parameters:
+      - description: twin id
+        in: path
+        name: twin_id
+        type: integer
       produces:
       - application/json
       responses:
