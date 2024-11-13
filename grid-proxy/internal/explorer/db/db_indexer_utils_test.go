@@ -31,7 +31,7 @@ func TestPostgresDatabase_DeleteOldGpus(t *testing.T) {
 		assert.NoError(t, err)
 		curCount := 0
 		err = dbTest.gormDB.Raw("SELECT COUNT(*) FROM node_gpu WHERE node_twin_id = ?", 103).Scan(&curCount).Error
-		
+
 		if err != nil {
 			t.Skipf("error counting GPUs: %v", err)
 		}
