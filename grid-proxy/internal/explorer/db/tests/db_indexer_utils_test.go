@@ -40,7 +40,7 @@ func TestPostgresDatabase_GetLastNodeTwinID(t *testing.T) {
 
 	t.Run("Get last node twin ID", func(t *testing.T) {
 		lastTwinID, err := dbTest.GetLastNodeTwinID(ctx)
-		
+
 		assert.NoError(t, err)
 		assert.Equal(t, uint32(702), lastTwinID)
 	})
@@ -65,7 +65,6 @@ func TestPostgresDatabase_GetNodeTwinIDsAfter(t *testing.T) {
 		}
 	})
 }
-
 
 // TestPostgresDatabase_GetHealthyNodeTwinIds tests the GetHealthyNodeTwinIds function.
 func TestPostgresDatabase_GetHealthyNodeTwinIds(t *testing.T) {

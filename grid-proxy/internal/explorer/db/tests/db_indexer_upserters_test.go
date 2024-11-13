@@ -55,12 +55,12 @@ func TestPostgresDatabase_UpsertNodeHealth(t *testing.T) {
 		}
 
 		countOfHealthyNodeIds, err := dbTest.GetHealthyNodeTwinIds(ctx)
-		assert.NoError(t,err)
+		assert.NoError(t, err)
 		err = dbTest.UpsertNodeHealth(ctx, healthReports)
 		assert.NoError(t, err)
 
 		currCountOfHealthyNodeIds, err := dbTest.GetHealthyNodeTwinIds(ctx)
-		assert.NoError(t,err)
+		assert.NoError(t, err)
 
 		assert.Equal(t, len(countOfHealthyNodeIds)+1, len(currCountOfHealthyNodeIds))
 	})
@@ -76,50 +76,50 @@ func TestPostgresDatabase_UpsertNodeDmi(t *testing.T) {
 
 	t.Run("Upsert Node DMI", func(t *testing.T) {
 		dmis := []types.Dmi{
-			{   
-				NodeTwinId: 105, 
+			{
+				NodeTwinId: 105,
 				BIOS: types.BIOS{
-					Vendor: "American Megatrends",
+					Vendor:  "American Megatrends",
 					Version: "v1.0",
-				}, 
+				},
 				Baseboard: types.Baseboard{
 					Manufacturer: "ASUS",
-					ProductName: "Prime Z390-A",
-				}, 
+					ProductName:  "Prime Z390-A",
+				},
 				Processor: []types.Processor{
 					{
-						Version: "Intel Core i7-9700K",
+						Version:     "Intel Core i7-9700K",
 						ThreadCount: "8",
 					},
-				}, 
+				},
 				Memory: []types.Memory{
 					{
 						Manufacturer: "Kingston",
-						Type: "DDR4 16GB",
+						Type:         "DDR4 16GB",
 					},
-				}, 
+				},
 				UpdatedAt: time.Now().Unix(),
 			},
-			{   
-				NodeTwinId: 106, 
+			{
+				NodeTwinId: 106,
 				BIOS: types.BIOS{
-					Vendor: "Phoenix Technologies",
+					Vendor:  "Phoenix Technologies",
 					Version: "v2.0",
 				},
 				Baseboard: types.Baseboard{
 					Manufacturer: "Gigabyte",
-					ProductName: "B450 AORUS PRO WIFI",
+					ProductName:  "B450 AORUS PRO WIFI",
 				},
 				Processor: []types.Processor{
 					{
-						Version: "AMD Ryzen 7 3700X",
+						Version:     "AMD Ryzen 7 3700X",
 						ThreadCount: "16",
 					},
 				},
 				Memory: []types.Memory{
 					{
 						Manufacturer: "Corsair",
-						Type: "DDR4 32GB",
+						Type:         "DDR4 32GB",
 					},
 				},
 				UpdatedAt: time.Now().Unix(),
@@ -192,7 +192,6 @@ func TestPostgresDatabase_UpsertNodeWorkloads(t *testing.T) {
 		//todo verify whether these NodesWorkloads's are really upserted right or not
 	})
 }
-
 
 // TestPostgresDatabase_GetLastUpsertsTimestamp tests the GetLastUpsertsTimestamp function.
 func TestPostgresDatabase_GetLastUpsertsTimestamp(t *testing.T) {

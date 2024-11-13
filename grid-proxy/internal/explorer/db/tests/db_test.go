@@ -8,10 +8,8 @@ import (
 	"database/sql"
 )
 
+func TestMain(m *testing.M) {
 
-
-func TestMain(m *testing.M){
-	
 	// Connect to the default `postgres` database to create `testdb`
 	initialDb, err := sql.Open("postgres", "host=localhost user=postgres port=5432 password=mypassword sslmode=disable")
 	if err != nil {
@@ -53,7 +51,7 @@ func TestMain(m *testing.M){
 	if err != nil {
 		log.Fatalf("%e", err)
 	}
-	
+
 	// Load and execute schema
 	setup, err := os.ReadFile("../setup.sql")
 	if err != nil {
@@ -75,6 +73,5 @@ func TestMain(m *testing.M){
 	}
 	code := m.Run()
 	os.Exit(code)
-	
-}
 
+}

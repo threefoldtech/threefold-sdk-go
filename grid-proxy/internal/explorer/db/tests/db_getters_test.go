@@ -12,8 +12,8 @@ import (
 
 // TestPostgresDatabase_GetNode tests the GetNode function.
 func TestPostgresDatabase_GetNode(t *testing.T) {
-	
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432,"postgres","mypassword","testdb", 80, logger.Error)
+
+	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 
 	if err != nil {
 		t.Skipf("Can't connect to testdb %e", err)
@@ -48,7 +48,7 @@ func TestPostgresDatabase_GetNode(t *testing.T) {
 
 // TestPostgresDatabase_GetFarm tests the GetFarm function.
 func TestPostgresDatabase_GetFarm(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -93,10 +93,9 @@ func TestPostgresDatabase_GetFarm(t *testing.T) {
 	})
 }
 
-
 // TestPostgresDatabase_GetNodes tests the GetNodes function.
 func TestPostgresDatabase_GetNodes(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -132,7 +131,7 @@ func TestPostgresDatabase_GetNodes(t *testing.T) {
 		_, count, err := dbTest.GetNodes(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(3), count )
+		assert.Equal(t, uint(3), count)
 	})
 
 	t.Run("Filter by farm id and add limit to 2 nodes", func(t *testing.T) {
@@ -141,8 +140,8 @@ func TestPostgresDatabase_GetNodes(t *testing.T) {
 			FarmIDs: farmId,
 		}
 		limit := types.Limit{
-			Size:     2,
-			Page:     1,
+			Size: 2,
+			Page: 1,
 		}
 
 		nodes, _, err := dbTest.GetNodes(ctx, filter, limit)
@@ -157,8 +156,8 @@ func TestPostgresDatabase_GetNodes(t *testing.T) {
 			Country: &country,
 		}
 		limit := types.Limit{
-			Size:     999999999999,
-			Page:     1,
+			Size: 999999999999,
+			Page: 1,
 		}
 
 		nodes, _, err := dbTest.GetNodes(ctx, filter, limit)
@@ -170,10 +169,9 @@ func TestPostgresDatabase_GetNodes(t *testing.T) {
 	})
 }
 
-
 // TestPostgresDatabase_GetNodes tests the GetFarms function.
 func TestPostgresDatabase_GetFarms(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -191,7 +189,7 @@ func TestPostgresDatabase_GetFarms(t *testing.T) {
 		nodes, count, err := dbTest.GetFarms(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(100), count )
+		assert.Equal(t, uint(100), count)
 		assert.NotEmpty(t, nodes)
 	})
 
@@ -199,7 +197,7 @@ func TestPostgresDatabase_GetFarms(t *testing.T) {
 
 // TestPostgresDatabase_GetTwins tests the GetTwins function.
 func TestPostgresDatabase_GetTwins(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -217,7 +215,7 @@ func TestPostgresDatabase_GetTwins(t *testing.T) {
 		_, count, err := dbTest.GetTwins(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(1300), count )
+		assert.Equal(t, uint(1300), count)
 	})
 
 	t.Run("Retrieve twin with twin id", func(t *testing.T) {
@@ -242,10 +240,9 @@ func TestPostgresDatabase_GetTwins(t *testing.T) {
 	})
 }
 
-
 // TestPostgresDatabase_GetContracts tests the GetContracts function.
 func TestPostgresDatabase_GetContracts(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -263,7 +260,7 @@ func TestPostgresDatabase_GetContracts(t *testing.T) {
 		_, count, err := dbTest.GetContracts(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(61), count )
+		assert.Equal(t, uint(61), count)
 	})
 
 	t.Run("Retrieve contract with id", func(t *testing.T) {
@@ -280,7 +277,7 @@ func TestPostgresDatabase_GetContracts(t *testing.T) {
 		contract, count, err := dbTest.GetContracts(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(1), count )
+		assert.Equal(t, uint(1), count)
 		assert.Equal(t, uint(37), contract[0].ContractID)
 		assert.Equal(t, uint(303), contract[0].NodeID)
 		assert.Equal(t, uint(1), contract[0].NumberOfPublicIps)
@@ -300,7 +297,7 @@ func TestPostgresDatabase_GetContracts(t *testing.T) {
 		contract, count, err := dbTest.GetContracts(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(1), count )
+		assert.Equal(t, uint(1), count)
 		assert.Equal(t, uint(52), contract[0].ContractID)
 		assert.Equal(t, "401c4f28-4a84-47ff-9a91-50426305db00", contract[0].Name)
 	})
@@ -319,7 +316,7 @@ func TestPostgresDatabase_GetContracts(t *testing.T) {
 		contract, count, err := dbTest.GetContracts(ctx, filter, limit)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint(1), count )
+		assert.Equal(t, uint(1), count)
 		assert.Equal(t, uint(52), contract[0].ContractID)
 		assert.Equal(t, "401c4f28-4a84-47ff-9a91-50426305db00", contract[0].Name)
 	})
@@ -341,16 +338,15 @@ func TestPostgresDatabase_GetContracts(t *testing.T) {
 		//name contracts + node contracts
 		assert.Equal(t, uint(29), count)
 		for _, contract := range contracts {
-			assert.Equal(t, contractType[0] ,contract.State)
+			assert.Equal(t, contractType[0], contract.State)
 		}
 	})
 
 }
 
-
 // TestPostgresDatabase_GetContract tests the GetContract function.
 func TestPostgresDatabase_GetContract(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -368,7 +364,6 @@ func TestPostgresDatabase_GetContract(t *testing.T) {
 		assert.Equal(t, uint(1), contract.NumberOfPublicIps)
 	})
 
-
 	t.Run("Retrieve contract with id", func(t *testing.T) {
 		id := uint32(52)
 		contract, err := dbTest.GetContract(ctx, id)
@@ -385,15 +380,14 @@ func TestPostgresDatabase_GetContract(t *testing.T) {
 
 		assert.ErrorIs(t, err, db.ErrContractNotFound)
 		assert.Equal(t, db.DBContract{}, contract)
-		
+
 	})
 
 }
 
-
 // TestPostgresDatabase_GetContractBills tests the GetContractBills function.
 func TestPostgresDatabase_GetContractBills(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -407,12 +401,12 @@ func TestPostgresDatabase_GetContractBills(t *testing.T) {
 			Page:     1,
 			RetCount: true,
 		}
-		contractBills, count, err := dbTest.GetContractBills(ctx, id,limit)
+		contractBills, count, err := dbTest.GetContractBills(ctx, id, limit)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, contractBills)
 		assert.Equal(t, uint(9), count)
-		//assert.Equal(t, uint64(37), contractBills[0].ContractId)		
+		//assert.Equal(t, uint64(37), contractBills[0].ContractId)
 	})
 
 	t.Run("Retrieve contract bills with id not found", func(t *testing.T) {
@@ -422,7 +416,7 @@ func TestPostgresDatabase_GetContractBills(t *testing.T) {
 			Page:     1,
 			RetCount: true,
 		}
-		_, count, err := dbTest.GetContractBills(ctx, id,limit)
+		_, count, err := dbTest.GetContractBills(ctx, id, limit)
 
 		assert.NoError(t, err)
 		assert.Equal(t, uint(0), count)
@@ -432,7 +426,7 @@ func TestPostgresDatabase_GetContractBills(t *testing.T) {
 
 // TestPostgresDatabase_GetContractsLatestBillReports tests the GetContractsLatestBillReports function.
 func TestPostgresDatabase_GetContractsLatestBillReports(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -446,14 +440,14 @@ func TestPostgresDatabase_GetContractsLatestBillReports(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, contractBills)
 		assert.Equal(t, 2, len(contractBills))
-		//assert.Equal(t, uint64(37), contractBills[0].ContractId)		
+		//assert.Equal(t, uint64(37), contractBills[0].ContractId)
 	})
 
 }
 
 // TestPostgresDatabase_GetContractsTotalBilledAmount tests the GetContractsTotalBilledAmount function.
 func TestPostgresDatabase_GetContractsTotalBilledAmount(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -465,8 +459,8 @@ func TestPostgresDatabase_GetContractsTotalBilledAmount(t *testing.T) {
 		totalBills, err := dbTest.GetContractsTotalBilledAmount(ctx, id)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint64(825687),totalBills)
-		//assert.Equal(t, uint64(37), contractBills[0].ContractId)		
+		assert.Equal(t, uint64(825687), totalBills)
+		//assert.Equal(t, uint64(37), contractBills[0].ContractId)
 	})
 
 	t.Run("Retrieve contract bills with multiple ids", func(t *testing.T) {
@@ -474,14 +468,14 @@ func TestPostgresDatabase_GetContractsTotalBilledAmount(t *testing.T) {
 		totalBills, err := dbTest.GetContractsTotalBilledAmount(ctx, id)
 
 		assert.NoError(t, err)
-		assert.Equal(t, uint64(176890 + 825687),totalBills)
+		assert.Equal(t, uint64(176890+825687), totalBills)
 	})
 
 }
 
 // TestPostgresDatabase_GetPublicIps tests the GetPublicIps function.
 func TestPostgresDatabase_GetPublicIps(t *testing.T) {
-	
+
 	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
@@ -512,10 +506,10 @@ func TestPostgresDatabase_GetPublicIps(t *testing.T) {
 			FarmIDs: farmIds,
 		}
 		limit := types.Limit{
-			Size:     999999999999,
-			Page:     1,
-			RetCount: true,
-			SortBy: "contract_id",
+			Size:      999999999999,
+			Page:      1,
+			RetCount:  true,
+			SortBy:    "contract_id",
 			SortOrder: types.SortOrderAsc,
 		}
 		publicIp, count, err := dbTest.GetPublicIps(ctx, filter, limit)
