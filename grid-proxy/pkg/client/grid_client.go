@@ -387,6 +387,17 @@ func (g *Clientimpl) PublicIps(ctx context.Context, filter types.PublicIpFilter,
 	return ips, totalCount, nil
 }
 
+func isTimeoutError(err error) bool {
+	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+		return true
+	}
+	if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
+		return true
+	}
+	return errors.Is(err, context.DeadlineExceeded) ||
+		strings.Contains(err.Error(), "timeout awaiting response headers")
+}
+
 func (g *Clientimpl) newHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: time.Second * 30,
@@ -447,7 +458,8 @@ func (g *Clientimpl) httpGet(path string, params ...interface{}) (resp *http.Res
 		if reqErr != nil &&
 			(errors.Is(reqErr, http.ErrAbortHandler) ||
 				errors.Is(reqErr, http.ErrHandlerTimeout) ||
-				errors.Is(reqErr, http.ErrServerClosed)) {
+				errors.Is(reqErr, http.ErrServerClosed) ||
+				isTimeoutError(reqErr)) {
 			g.activeStackIdx = (g.activeStackIdx + 1) % len(g.endpoints)
 			return reqErr
 		}
