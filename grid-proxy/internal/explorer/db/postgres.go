@@ -254,7 +254,7 @@ func (d *PostgresDatabase) GetStats(ctx context.Context, filter types.StatsFilte
 	}
 
 	if err := d.gormDB.WithContext(ctx).Table("node").
-		Select("SUM(COALESCE(workloads_number, 0)) as workloads_number").
+		Select("COALESCE(SUM(workloads_number), 0) as workloads_number").
 		Where(condition).
 		Joins("LEFT JOIN node_workloads ON node.twin_id = node_workloads.node_twin_id").
 		Scan(&stats.WorkloadsNumber).Error; err != nil {
