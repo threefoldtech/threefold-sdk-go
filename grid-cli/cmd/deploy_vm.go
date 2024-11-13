@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -13,6 +14,8 @@ import (
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-cli/internal/config"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-cli/internal/filters"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/deployer"
+	client "github.com/threefoldtech/tfgrid-sdk-go/grid-client/node"
+	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/subi"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/workloads"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/zos"
 )
@@ -130,7 +133,16 @@ var deployVMCmd = &cobra.Command{
 		}
 
 		// if no public ips or yggdrasil then we should go for the light deployment
-		if !ipv4 && !ipv6 && !ygg {
+		isLight := !ipv4 && !ipv6 && !ygg
+
+		if node != 0 {
+			isLight, err = isZos4Node(cmd.Context(), t.NcPool, t.SubstrateConn, node)
+			if err != nil {
+				log.Fatal().Err(err).Send()
+			}
+		}
+
+		if isLight {
 			vm := workloads.VMLight{
 				Name:           name,
 				EnvVars:        env,
@@ -320,4 +332,17 @@ func executeVMLight(
 	}
 
 	return nil
+}
+
+func isZos4Node(ctx context.Context, client client.NodeClientGetter, sub subi.SubstrateExt, node uint32) (isLight bool, err error) {
+	cli, err := client.GetNodeClient(sub, node)
+	if err != nil {
+		return
+	}
+	feat, err := cli.SystemGetNodeFeatures(ctx)
+	if err != nil {
+		return
+	}
+
+	return slices.Contains(feat, zos.NetworkLightType), nil
 }
