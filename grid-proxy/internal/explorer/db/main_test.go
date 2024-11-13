@@ -6,25 +6,27 @@ import (
 	"testing"
 
 	"database/sql"
+
+	"gorm.io/gorm/logger"
 )
 
 func TestMain(m *testing.M) {
 
 	// Connect to the default `postgres` database to create `testdb`
-	initialDb, err := sql.Open("postgres", "host=localhost user=postgres port=5432 password=mypassword sslmode=disable")
+	initialDb, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "postgres", 80, logger.Error)
 	if err != nil {
 		log.Fatalf("could not connect to default database: %v", err)
 	}
 	defer initialDb.Close()
 
 	// drop the `testdb` database
-	_, err = initialDb.Exec(`DROP DATABASE IF EXISTS testdb;`)
+	err = initialDb.gormDB.Exec(`DROP DATABASE IF EXISTS testdb;`).Error
 	if err != nil {
 		log.Fatalf("could not create testdb database: %v", err)
 	}
 
 	// Create the `testdb` database
-	_, err = initialDb.Exec(`CREATE DATABASE testdb;`)
+	err = initialDb.gormDB.Exec(`CREATE DATABASE testdb;`).Error
 	if err != nil {
 		log.Fatalf("could not create testdb database: %v", err)
 	}
@@ -37,7 +39,7 @@ func TestMain(m *testing.M) {
 	defer testDb.Close()
 
 	// Load and execute schema
-	schema, err := os.ReadFile("../../../../tools/db/schema.sql")
+	schema, err := os.ReadFile("../../../tools/db/schema.sql")
 	if err != nil {
 		log.Fatalf("could not load schema sql file: %v", err)
 	}
@@ -53,7 +55,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Load and execute schema
-	setup, err := os.ReadFile("../setup.sql")
+	setup, err := os.ReadFile("./setup.sql")
 	if err != nil {
 		log.Fatalf("could not load setup sql file: %v", err)
 	}
@@ -75,3 +77,5 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 
 }
+
+

@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 	"gorm.io/gorm/logger"
 )
 
 // TestPostgresDatabase_DeleteOldGpus tests the DeleteOldGpus function.
 func TestPostgresDatabase_DeleteOldGpus(t *testing.T) {
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -23,16 +22,28 @@ func TestPostgresDatabase_DeleteOldGpus(t *testing.T) {
 		nodeTwinIDs := []uint32{103}
 		expiration := int64(1731429101)
 
-		err := dbTest.DeleteOldGpus(ctx, nodeTwinIDs, expiration)
+		count := 0
+		err := dbTest.gormDB.Raw("SELECT COUNT(*) FROM node_gpu WHERE node_twin_id = ?", 103).Scan(&count).Error
+		if err != nil {
+			t.Skipf("error counting GPUs: %v", err)
+		}
+		err = dbTest.DeleteOldGpus(ctx, nodeTwinIDs, expiration)
 		assert.NoError(t, err)
-		//todo verify whether these gpus are really deleted or not
+		curCount := 0
+		err = dbTest.gormDB.Raw("SELECT COUNT(*) FROM node_gpu WHERE node_twin_id = ?", 103).Scan(&curCount).Error
+		
+		if err != nil {
+			t.Skipf("error counting GPUs: %v", err)
+		}
+
+		assert.Less(t, curCount, count)
 
 	})
 }
 
 // TestPostgresDatabase_GetLastNodeTwinID tests the GetLastNodeTwinID function.
 func TestPostgresDatabase_GetLastNodeTwinID(t *testing.T) {
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -48,7 +59,7 @@ func TestPostgresDatabase_GetLastNodeTwinID(t *testing.T) {
 
 // TestPostgresDatabase_GetNodeTwinIDsAfter tests the GetNodeTwinIDsAfter function.
 func TestPostgresDatabase_GetNodeTwinIDsAfter(t *testing.T) {
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -68,7 +79,7 @@ func TestPostgresDatabase_GetNodeTwinIDsAfter(t *testing.T) {
 
 // TestPostgresDatabase_GetHealthyNodeTwinIds tests the GetHealthyNodeTwinIds function.
 func TestPostgresDatabase_GetHealthyNodeTwinIds(t *testing.T) {
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}

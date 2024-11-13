@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 	"gorm.io/gorm/logger"
 )
@@ -13,7 +12,7 @@ import (
 // TestPostgresDatabase_GetNode tests the GetNode function.
 func TestPostgresDatabase_GetNode(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 
 	if err != nil {
 		t.Skipf("Can't connect to testdb %e", err)
@@ -41,15 +40,15 @@ func TestPostgresDatabase_GetNode(t *testing.T) {
 
 		node, err := dbTest.GetNode(ctx, nonExistentNodeID)
 
-		assert.ErrorIs(t, err, db.ErrNodeNotFound)
-		assert.Equal(t, db.Node{}, node)
+		assert.ErrorIs(t, err, ErrNodeNotFound)
+		assert.Equal(t, Node{}, node)
 	})
 }
 
 // TestPostgresDatabase_GetFarm tests the GetFarm function.
 func TestPostgresDatabase_GetFarm(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -88,15 +87,15 @@ func TestPostgresDatabase_GetFarm(t *testing.T) {
 
 		farm, _ := dbTest.GetFarm(ctx, nonExistentFarmID)
 
-		//assert.ErrorIs(t, err, db.ErrFarmNotFound)
-		assert.Equal(t, db.Farm{}, farm)
+		//assert.ErrorIs(t, err, ErrFarmNotFound)
+		assert.Equal(t, Farm{}, farm)
 	})
 }
 
 // TestPostgresDatabase_GetNodes tests the GetNodes function.
 func TestPostgresDatabase_GetNodes(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -172,7 +171,7 @@ func TestPostgresDatabase_GetNodes(t *testing.T) {
 // TestPostgresDatabase_GetNodes tests the GetFarms function.
 func TestPostgresDatabase_GetFarms(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -198,7 +197,7 @@ func TestPostgresDatabase_GetFarms(t *testing.T) {
 // TestPostgresDatabase_GetTwins tests the GetTwins function.
 func TestPostgresDatabase_GetTwins(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -243,7 +242,7 @@ func TestPostgresDatabase_GetTwins(t *testing.T) {
 // TestPostgresDatabase_GetContracts tests the GetContracts function.
 func TestPostgresDatabase_GetContracts(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -347,7 +346,7 @@ func TestPostgresDatabase_GetContracts(t *testing.T) {
 // TestPostgresDatabase_GetContract tests the GetContract function.
 func TestPostgresDatabase_GetContract(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -378,8 +377,8 @@ func TestPostgresDatabase_GetContract(t *testing.T) {
 		id := uint32(999)
 		contract, err := dbTest.GetContract(ctx, id)
 
-		assert.ErrorIs(t, err, db.ErrContractNotFound)
-		assert.Equal(t, db.DBContract{}, contract)
+		assert.ErrorIs(t, err, ErrContractNotFound)
+		assert.Equal(t, DBContract{}, contract)
 
 	})
 
@@ -388,7 +387,7 @@ func TestPostgresDatabase_GetContract(t *testing.T) {
 // TestPostgresDatabase_GetContractBills tests the GetContractBills function.
 func TestPostgresDatabase_GetContractBills(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -427,7 +426,7 @@ func TestPostgresDatabase_GetContractBills(t *testing.T) {
 // TestPostgresDatabase_GetContractsLatestBillReports tests the GetContractsLatestBillReports function.
 func TestPostgresDatabase_GetContractsLatestBillReports(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -448,7 +447,7 @@ func TestPostgresDatabase_GetContractsLatestBillReports(t *testing.T) {
 // TestPostgresDatabase_GetContractsTotalBilledAmount tests the GetContractsTotalBilledAmount function.
 func TestPostgresDatabase_GetContractsTotalBilledAmount(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
@@ -476,7 +475,7 @@ func TestPostgresDatabase_GetContractsTotalBilledAmount(t *testing.T) {
 // TestPostgresDatabase_GetPublicIps tests the GetPublicIps function.
 func TestPostgresDatabase_GetPublicIps(t *testing.T) {
 
-	dbTest, err := db.NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
+	dbTest, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "testdb", 80, logger.Error)
 	if err != nil {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
