@@ -14,6 +14,8 @@ import (
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-cli/internal/config"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-cli/internal/filters"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/deployer"
+	client "github.com/threefoldtech/tfgrid-sdk-go/grid-client/node"
+	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/subi"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/workloads"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-client/zos"
 )
@@ -134,7 +136,7 @@ var deployVMCmd = &cobra.Command{
 		isLight := !ipv4 && !ipv6 && !ygg
 
 		if node != 0 {
-			isLight, err = isZos4Node(context.Background(), t, node)
+			isLight, err = isZos4Node(cmd.Context(), t.NcPool, t.SubstrateConn, node)
 			if err != nil {
 				log.Fatal().Err(err).Send()
 			}
@@ -332,8 +334,8 @@ func executeVMLight(
 	return nil
 }
 
-func isZos4Node(ctx context.Context, tf deployer.TFPluginClient, node uint32) (isLight bool, err error) {
-	cli, err := tf.NcPool.GetNodeClient(tf.SubstrateConn, node)
+func isZos4Node(ctx context.Context, client client.NodeClientGetter, sub subi.SubstrateExt, node uint32) (isLight bool, err error) {
+	cli, err := client.GetNodeClient(sub, node)
 	if err != nil {
 		return
 	}
