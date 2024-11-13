@@ -107,3 +107,13 @@ type NodeFeatures struct {
 func (NodeFeatures) TableName() string {
 	return "node_features"
 }
+
+type NodeLocation struct {
+	Country   string `json:"country" gorm:"unique;not null"`
+	Continent string `json:"continent"`
+	UpdatedAt int64  `json:"updated_at"`
+}
+
+func (NodeLocation) TableName() string {
+	return "node_location"
+}

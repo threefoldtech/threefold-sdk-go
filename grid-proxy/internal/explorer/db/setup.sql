@@ -119,7 +119,6 @@ SELECT
     rent_contract.contract_id as rent_contract_id,
     count(node_contract.contract_id) as node_contracts_count,
     node.country as country,
-    country.region as region,
     COALESCE(dmi.bios, '{}') as bios,
     COALESCE(dmi.baseboard, '{}') as baseboard,
     COALESCE(dmi.processor, '[]') as processor,
@@ -136,7 +135,6 @@ FROM node
     LEFT JOIN contract_resources ON node_contract.resources_used_id = contract_resources.id 
     LEFT JOIN node_resources_total AS node_resources_total ON node_resources_total.node_id = node.id
     LEFT JOIN rent_contract on node.node_id = rent_contract.node_id AND rent_contract.state IN ('Created', 'GracePeriod')
-    LEFT JOIN country ON LOWER(node.country) = LOWER(country.name)
     LEFT JOIN speed ON node.twin_id = speed.node_twin_id
     LEFT JOIN dmi ON node.twin_id = dmi.node_twin_id
     LEFT JOIN farm ON farm.farm_id = node.farm_id
@@ -163,7 +161,6 @@ GROUP BY
     COALESCE(node_gpu_agg.gpus, '[]'),
     COALESCE(node_gpu_agg.gpu_count, 0),
     node.country,
-    country.region,
     COALESCE(dmi.bios, '{}'),
     COALESCE(dmi.baseboard, '{}'),
     COALESCE(dmi.processor, '[]'),
@@ -172,8 +169,7 @@ GROUP BY
     COALESCE(speed.download, 0),
     node.certification,
     node.extra_fee,
-    farm.pricing_policy_id,
-    country.region;
+    farm.pricing_policy_id;
 
 DROP TABLE IF EXISTS resources_cache;
 CREATE TABLE IF NOT EXISTS resources_cache(
@@ -194,7 +190,6 @@ CREATE TABLE IF NOT EXISTS resources_cache(
     rent_contract_id INTEGER,
     node_contracts_count INTEGER NOT NULL,
     country TEXT,
-    region TEXT,
     bios jsonb,
     baseboard jsonb,
     processor jsonb,
@@ -283,27 +278,11 @@ CREATE INDEX IF NOT EXISTS idx_public_config_node_id ON public_config USING gin(
 /*
  Node Trigger:
     - Insert node record > Insert new resources_cache record
-    - Update node country > update resources_cache country/region
 */
 CREATE OR REPLACE FUNCTION reflect_node_changes() RETURNS TRIGGER AS 
 $$ 
 BEGIN
-    IF (TG_OP = 'UPDATE') THEN
-        BEGIN
-            UPDATE resources_cache
-            SET
-                country = NEW.country,
-                region = (
-                    SELECT region FROM country WHERE LOWER(country.name) = LOWER(NEW.country)
-                )
-            WHERE
-                resources_cache.node_id = NEW.node_id;
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE NOTICE 'Error updating resources_cache: %', SQLERRM;
-        END;
-
-    ELSIF (TG_OP = 'INSERT') THEN
+    IF (TG_OP = 'INSERT') THEN
         BEGIN
             INSERT INTO resources_cache
             SELECT *
@@ -328,7 +307,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER tg_node
-    AFTER INSERT OR DELETE OR UPDATE OF country 
+    AFTER INSERT OR DELETE
     ON node
     FOR EACH ROW EXECUTE PROCEDURE reflect_node_changes();
 

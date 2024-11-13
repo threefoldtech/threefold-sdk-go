@@ -113,8 +113,8 @@ func generateData(db *sql.DB, gormDB *gorm.DB, seed int) error {
 		return fmt.Errorf("failed to generate node gpus: %w", err)
 	}
 
-	if err := generator.GenerateCountries(); err != nil {
-		return fmt.Errorf("failed to generate countries: %w", err)
+	if err := generator.GenerateLocations(); err != nil {
+		return fmt.Errorf("failed to generate locations: %w", err)
 	}
 
 	if err := generator.GenerateSpeedReports(); err != nil {

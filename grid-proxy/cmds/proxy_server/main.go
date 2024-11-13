@@ -72,6 +72,8 @@ type flags struct {
 	workloadsIndexerIntervalMins uint
 	featuresIndexerNumWorkers    uint
 	featuresIndexerIntervalMins  uint
+	locationIndexerNumWorkers    uint
+	locationIndexerIntervalMins  uint
 }
 
 func main() {
@@ -111,6 +113,9 @@ func main() {
 	flag.UintVar(&f.workloadsIndexerNumWorkers, "workloads-indexer-workers", 10, "number of workers checking on node workloads number")
 	flag.UintVar(&f.featuresIndexerIntervalMins, "features-indexer-interval", 60*24, "node features check interval in min")
 	flag.UintVar(&f.featuresIndexerNumWorkers, "features-indexer-workers", 10, "number of workers checking on node supported features")
+	flag.UintVar(&f.locationIndexerIntervalMins, "location-indexer-interval", 60*6, "node location check interval in min")
+	flag.UintVar(&f.locationIndexerNumWorkers, "location-indexer-workers", 100, "number of workers checking on node location")
+
 	flag.Parse()
 
 	// shows version and exit
@@ -153,6 +158,8 @@ func main() {
 	indexerIntervals := make(map[string]uint)
 	if !f.noIndexer {
 		startIndexers(ctx, f, &db, rpcRmbClient)
+
+		// for the health endpoint
 		indexerIntervals["gpu"] = f.gpuIndexerIntervalMins
 		indexerIntervals["health"] = f.healthIndexerIntervalMins
 		indexerIntervals["dmi"] = f.dmiIndexerIntervalMins
@@ -160,6 +167,7 @@ func main() {
 		indexerIntervals["ipv6"] = f.ipv6IndexerIntervalMins
 		indexerIntervals["speed"] = f.speedIndexerIntervalMins
 		indexerIntervals["features"] = f.featuresIndexerIntervalMins
+		indexerIntervals["location"] = f.locationIndexerIntervalMins
 	} else {
 		log.Info().Msg("Indexers did not start")
 	}
@@ -238,6 +246,15 @@ func startIndexers(ctx context.Context, f flags, db db.Database, rpcRmbClient *p
 		f.featuresIndexerNumWorkers,
 	)
 	featIdx.Start(ctx)
+
+	locationIdx := indexer.NewIndexer[types.NodeLocation](
+		indexer.NewLocationWork(f.locationIndexerIntervalMins),
+		"location",
+		db,
+		rpcRmbClient,
+		f.locationIndexerNumWorkers,
+	)
+	locationIdx.Start(ctx)
 }
 
 func app(s *http.Server, f flags) error {
