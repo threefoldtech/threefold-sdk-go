@@ -1,0 +1,245 @@
+
+Table twin {
+  id integer [primary key]
+  grid_version grid_version
+  account_id varchar(100)
+  public_key varchar(100)
+  relay varchar(100)
+
+  Indexes {
+    (relay) [name: 'idx_twin_relay']
+  }
+}
+
+Table farm {
+  id integer [primary key]
+  name varchar(100)
+  twin_id integer [ref: - twin.id]
+  stellar_address varchar(100)
+  dedicated boolean
+  pricing_policy_id integer [ref: > pricing_policy.id]
+  certification certification
+  grid_version grid_version
+
+  Indexes {
+    (twin_id) [name: 'idx_farm_twin']
+  }
+}
+
+Table node {
+  id integer [primary key]
+  twin_id integer [ref: - twin.id]
+  farm_id integer [ref: > farm.id]
+  total_hru integer
+  total_cru integer
+  total_sru integer
+  total_mru integer
+  serial_number integer
+  created_at timestamp
+  extra_fee integer
+  grid_version grid_version
+  certification certification
+
+  Indexes {
+    (farm_id) [name: 'idx_node_farm']
+  }
+}
+// normalize the node/name/rent contract. that has a relation with bill
+// to have a single table has the common column and table for each type
+// node has a relation with resources
+
+Table node_contract {
+  id integer [primary key]
+  node_id integer [ref: > node.id]
+  twin_id integer [ref: > twin.id]
+  contract_resource_id integer [ref: > contract_resource.id]
+  solution_provider_id integer [ref: > solution_provider.id]
+  state contract_state
+  created_at timestamp
+  deployment_data text
+  deployment_hash text
+  ips_num integer
+
+  Indexes {
+    (node_id) [name: 'idx_node_contract_node']
+    (twin_id) [name: 'idx_node_contract_twin']
+    (state) [name: 'idx_node_contract_state']
+  }
+}
+
+Table rent_contract {
+  id integer [primary key]
+  node_id integer [ref: > node.id]
+  twin_id integer [ref: > twin.id]
+  contract_resource_id integer [ref: > contract_resource.id]
+  solution_provider_id integer [ref: > solution_provider.id]
+  state contract_state
+  created_at timestamp
+
+  Indexes {
+    (node_id) [name: 'idx_rent_contract_node']
+    (twin_id) [name: 'idx_rent_contract_twin']
+    (state) [name: 'idx_rent_contract_state']
+  }
+}
+
+Table name_contract {
+  id integer [primary key]
+  twin_id integer [ref: > twin.id]
+  contract_resource_id integer [ref: > contract_resource.id]
+  solution_provider_id integer [ref: > solution_provider.id]
+  state contract_state
+  created_at timestamptz
+
+  Indexes {
+    (twin_id) [name: 'idx_name_contract_twin']
+    (state) [name: 'idx_name_contract_state']
+  }
+}
+
+Enum contract_state {
+  created
+  deleted
+  grace_period
+  out_of_funds
+}
+
+
+Table ContractBill {
+  contract_id integer [ref: > node_contract.id]
+  discount discount
+  timestamp timestamp
+  amount integer
+}
+
+Enum discount {
+  none
+  default
+  bronze
+  silver
+  gold
+}
+
+
+Table node_info {
+  node_id integer [ref: - node.id]
+  has_ipv6 boolean
+  num_workloads integer
+  upload_speed numeric
+  download_speed numeric
+}
+
+// find a solution for jsonb type
+Table dmi {
+  node_id integer [ref: - node.id]
+  bios jsonb
+  baseboard jsonb
+  processor jsonb
+  memory jsonb
+}
+
+Table gpu{
+  node_id integer [ref: > node.id]
+  id text
+  vendor text
+  device text
+  contract integer
+}
+
+
+// duplicated data
+Table location {
+  node_id integer [ref: - node.id]
+  langitude integer
+  latitude integer
+  country varchar(100)
+  city varchar(100)
+  region varchar(20)
+}
+
+Table PublicConfig {
+  node_id integer [ref: - node.id]
+  ipv4 varchar(50)
+  ipv6 varchar(50)
+  gw4 varchar(50)
+  gw6 varchar(50)
+  domain varchar(50)
+}
+
+Table Interfaces  {
+  node_id integer [ref: > node.id]
+  name varchar(50)
+  mac varchar(50)
+  ips varchar(50)
+}
+
+Table power {
+  node_id integer [ref: - node.id]
+  state NodeState
+  target NodeState
+  status NodeState // generated
+  Healthy boolean
+  last_uptime_report timestamp
+  total_uptime integer
+}
+
+Enum NodeState {
+  Up
+  Down
+  Standby
+}
+
+
+
+Table contract_resource {
+  id integer [primary key]
+  hru integer
+  sru integer
+  mru integer
+  cru integer
+}
+
+Table solution_provider {
+  id integer [pk]
+  description text
+  link text
+  approved boolean
+  providers text
+}
+
+
+
+Enum grid_version {
+  One
+}
+
+Enum certification {
+  Gold
+  NotCertified
+  DIY
+  Certified
+}
+
+Table pricing_policy {
+  id integer [pk]
+  grid_version grid_version
+  name varchar(100)
+  foundation_account varchar(100)
+  certified_sales_account varchar(100)
+  dedication_discount integer
+  su_value integer
+  su_unit varchar(10)
+  cu_value integer
+  cu_unit varchar(10)
+  nu_value integer
+  nu_unit varchar(10)
+  ipu_value integer
+  ipu_unit varchar(10)
+}
+
+Table public_ip {
+  farm_id integer [ref: > farm.id ]
+  contract_id integer [ref: <> node_contract.id]
+  gateway varchar(25)
+  ip varchar(25)
+}

@@ -1,4 +1,4 @@
-package api
+package types
 
 type PublicIP struct {
 	FarmID     uint32 `json:"farm_id"`

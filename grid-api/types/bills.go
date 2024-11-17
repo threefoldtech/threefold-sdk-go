@@ -1,4 +1,4 @@
-package api
+package types
 
 type Bill struct {
 	ContractId uint32 `json:"contract_id"`

@@ -1,4 +1,4 @@
-package api
+package types
 
 type Deployment struct {
 	Type    string `json:"type"`

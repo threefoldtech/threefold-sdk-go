@@ -1,4 +1,4 @@
-package api
+package types
 
 import (
 	"github.com/threefoldtech/zos/pkg/gridtypes"
@@ -26,7 +26,6 @@ type Node struct {
 	PublicConfig PublicConfig `json:"public_config"`
 	Reservation  Reservation  `json:"reservation"`
 	Power        Power        `json:"power"`
-	Hardware     Hardware     `json:"hardware"` // moving to /hardware endpoint
 	Speed        Speed        `json:"speed"`
 	Features     []string     `json:"features"`
 }
@@ -76,36 +75,6 @@ type Reservation struct {
 	Renter    uint32  `json:"rented"`
 	ExtraFee  float64 `json:"extra_fee"`
 }
-
-type Hardware struct {
-	SerialNumber string      `json:"serial_number"`
-	BIOS         BIOS        `json:"bios"`
-	Baseboard    Baseboard   `json:"baseboard"`
-	Processor    []Processor `json:"processor"`
-	Memory       []Memory    `json:"memory"`
-	// GPU          []GPU       `json:"gpu"`
-}
-
-type BIOS struct {
-	Vendor  string `json:"vendor"`
-	Version string `json:"version"`
-}
-
-type Baseboard struct {
-	Manufacturer string `json:"manufacturer"`
-	ProductName  string `json:"product_name"`
-}
-
-type Processor struct {
-	Version     string `json:"version"`
-	ThreadCount string `json:"thread_count"`
-}
-
-type Memory struct {
-	Manufacturer string `json:"manufacturer"`
-	Type         string `json:"type"`
-}
-
 type Speed struct {
 	Upload   float64 `json:"upload"`
 	Download float64 `json:"download"`

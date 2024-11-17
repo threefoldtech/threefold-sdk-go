@@ -1,4 +1,4 @@
-package api
+package types
 
 type Twin struct {
 	TwinID    uint32 `json:"twin_id"`

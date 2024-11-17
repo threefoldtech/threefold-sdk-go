@@ -1,4 +1,4 @@
-package api
+package types
 
 type Status struct {
 	Version string `json:"version"`
