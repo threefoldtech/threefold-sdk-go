@@ -63,9 +63,13 @@ func main() {
 	errorRate := (1.0 - results.Success) * 100
 	pm.SuccessRate.Set(successRate)
 	pm.ErrorRate.Set(errorRate)
+	pm.AvgLatency.Set(results.Latencies.Mean.Seconds())
+	pm.MaxLatency.Set(results.Latencies.Max.Seconds())
 
 	fmt.Printf("Success Rate: %.2f%%\n", successRate)
 	fmt.Printf("Error Rate: %.2f%%\n", errorRate)
+	fmt.Printf("Average Latency: %v\n", results.Latencies.Mean.Seconds())
+	fmt.Printf("Maximum Latency: %v\n", results.Latencies.Max.Seconds())
 
 	time.Sleep(10 * time.Second)
 }
