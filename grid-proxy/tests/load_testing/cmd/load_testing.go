@@ -4,30 +4,40 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	prometheus_integration "github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/tests/load_testing/prometheus"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
+	"gopkg.in/yaml.v2"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
-	baseUrl := "http://localhost:8080"
-	targets := []vegeta.Target{
-		{Method: "GET", URL: baseUrl + "/contracts"},
-		{Method: "GET", URL: baseUrl + "/farms"},
-		{Method: "GET", URL: baseUrl + "/gateways"},
-		{Method: "GET", URL: baseUrl + "/nodes"},
-		{Method: "GET", URL: baseUrl + "/public_ips"},
-		{Method: "GET", URL: baseUrl + "/stats"},
-		{Method: "GET", URL: baseUrl + "/twins"},
+
+	data, err := os.ReadFile("test.yml")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read YAML file: %v", err))
+	}
+	var loadTest LoadTest
+	err = yaml.Unmarshal(data, &loadTest)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to unmarshal YAML: %v", err))
+	}
+
+	var targets []vegeta.Target
+	for _, endpoint := range loadTest.Endpoints {
+		targets = append(targets, vegeta.Target{
+			Method: "GET",
+			URL:    loadTest.BaseUrl + endpoint,
+		})
 	}
 
 	attacker := vegeta.NewAttacker()
 
-	rate := vegeta.Rate{Freq: 5000, Per: time.Second}
-	duration := 10 * time.Second
+	rate := vegeta.Rate{Freq: loadTest.Freq, Per: time.Second}
+	duration := loadTest.Duration * time.Second
 
 	reg := prometheus.NewRegistry()
 	pm := prometheus_integration.NewMetrics()
@@ -58,5 +68,11 @@ func main() {
 	fmt.Printf("Error Rate: %.2f%%\n", errorRate)
 
 	time.Sleep(10 * time.Second)
+}
 
+type LoadTest struct {
+	BaseUrl   string        `yaml:"base_url"`
+	Endpoints []string      `yaml:"endpoints"`
+	Freq      int           `yaml:"rate_second"`
+	Duration  time.Duration `yaml:"duration"`
 }

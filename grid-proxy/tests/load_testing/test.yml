@@ -1,0 +1,12 @@
+base_url: "https://gridproxy.dev.grid.tf/"
+endpoints:
+  - "/contracts"
+  - "/farms"
+  - "/gateways"
+  - "/nodes"
+  - "/public_ips"
+  - "/stats"
+  - "/twins"
+
+rate_second: 100
+duration: 60

@@ -24,6 +24,7 @@ require (
 	github.com/threefoldtech/zos v0.5.6-0.20240902110349-172a0a29a6ee
 	github.com/tsenart/vegeta/v12 v12.12.0
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
+	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.10
 
