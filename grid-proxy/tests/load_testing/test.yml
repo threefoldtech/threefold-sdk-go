@@ -8,5 +8,5 @@ endpoints:
   - "/stats"
   - "/twins"
 
-rate_second: 100
+rate_second: 1000
 duration: 60
