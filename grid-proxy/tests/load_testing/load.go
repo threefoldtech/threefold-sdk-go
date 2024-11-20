@@ -10,7 +10,7 @@ import (
 	"time"
 
 	prometheus_integration "github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/tests/load_testing/prometheus"
-	vegeta "github.com/tsenart/vegeta/v12/lib"
+	vegeta "github.com/tsenart/vegeta/lib"
 	"gopkg.in/yaml.v2"
 
 	"github.com/prometheus/client_golang/prometheus"
