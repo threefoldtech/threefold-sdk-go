@@ -1,6 +1,8 @@
 module github.com/threefoldtech/tfgrid-sdk-go/grid-cli
 
-go 1.21
+go 1.22
+
+toolchain go1.22.4
 
 require (
 	github.com/cosmos/go-bip39 v1.0.0
@@ -50,12 +52,12 @@ require (
 	github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go v0.15.18 // indirect
 	github.com/threefoldtech/zos4 v0.5.6-0.20241008102757-02d898c580c4 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b // indirect
 	gonum.org/v1/gonum v0.15.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

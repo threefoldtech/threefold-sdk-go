@@ -1,12 +1,14 @@
 module github.com/threefoldtech/tfgrid-sdk-go/user-contracts-mon
 
-go 1.21
+go 1.22
+
+toolchain go1.22.4
 
 require (
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/hashicorp/go-envparse v0.1.0
 	github.com/threefoldtech/tfgrid-sdk-go/grid-client v0.11.2
-	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 )
 
 require (
@@ -51,7 +53,7 @@ require (
 	golang.org/x/sys v0.26.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b // indirect
 	gonum.org/v1/gonum v0.15.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
 
