@@ -1,8 +1,7 @@
 module github.com/threefoldtech/tfgrid-sdk-go/grid-cli
 
-go 1.22
+go 1.21
 
-toolchain go1.22.4
 
 require (
 	github.com/cosmos/go-bip39 v1.0.0

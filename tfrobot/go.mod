@@ -1,8 +1,6 @@
 module github.com/threefoldtech/tfgrid-sdk-go/tfrobot
 
-go 1.22
-
-toolchain go1.22.4
+go 1.21
 
 require (
 	github.com/cosmos/go-bip39 v1.0.0
