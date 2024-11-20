@@ -1,0 +1,29 @@
+name: Proxy load testing
+
+defaults:
+  run:
+    working-directory: grid-proxy
+on:
+  schedule:
+    - cron: 0 21 * * *
+  workflow_dispatch:
+
+jobs:
+  load_test:
+   runs-on: ubuntu-latest
+
+   steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+
+    - name: Run Load Testing
+      run: |
+        go mod tidy
+        cd tests/load_testing
+        go test -v 
+
