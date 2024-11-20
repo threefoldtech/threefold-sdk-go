@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"slices"
 	"time"
 
 	prometheus_integration "github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/tests/load_testing/prometheus"
@@ -14,9 +16,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func PerformLoadTesting() error {
-
-	data, err := os.ReadFile("test.yml")
+func PerformLoadTesting(path string) error {
+	extension := filepath.Ext(path)
+	if !slices.Contains([]string{".yml", ".yaml"}, extension) {
+		return fmt.Errorf("Unsupported file extension")
+	}
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("Failed to read YAML file: %v", err)
 	}
