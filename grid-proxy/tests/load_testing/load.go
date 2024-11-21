@@ -19,16 +19,16 @@ import (
 func PerformLoadTesting(path string) error {
 	extension := filepath.Ext(path)
 	if !slices.Contains([]string{".yml", ".yaml"}, extension) {
-		return fmt.Errorf("Unsupported file extension")
+		return fmt.Errorf("unsupported file extension")
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("Failed to read YAML file: %v", err)
+		return fmt.Errorf("failed to read YAML file: %v", err)
 	}
 	var loadTest LoadTest
 	err = yaml.Unmarshal(data, &loadTest)
 	if err != nil {
-		return fmt.Errorf("Failed to unmarshal YAML: %v", err)
+		return fmt.Errorf("failed to unmarshal YAML: %v", err)
 	}
 
 	var targets []vegeta.Target
@@ -52,7 +52,7 @@ func PerformLoadTesting(path string) error {
 	}
 
 	go func() {
-		fmt.Println("Prometheus metrics server running on :9090/metrics")
+		log.Print("prometheus metrics server running on :9090/metrics")
 		log.Fatal(http.ListenAndServe(":9090", prometheus_integration.NewHandler(reg, time.Now().UTC())))
 	}()
 
@@ -71,10 +71,10 @@ func PerformLoadTesting(path string) error {
 	pm.AvgLatency.Set(results.Latencies.Mean.Seconds())
 	pm.MaxLatency.Set(results.Latencies.Max.Seconds())
 
-	fmt.Printf("Success Rate: %.2f%%\n", successRate)
-	fmt.Printf("Error Rate: %.2f%%\n", errorRate)
-	fmt.Printf("Average Latency: %v\n", results.Latencies.Mean.Seconds())
-	fmt.Printf("Maximum Latency: %v\n", results.Latencies.Max.Seconds())
+	log.Printf("Success Rate: %.2f%%\n", successRate)
+	log.Printf("Error Rate: %.2f%%\n", errorRate)
+	log.Printf("Average Latency: %v\n", results.Latencies.Mean.Seconds())
+	log.Printf("Maximum Latency: %v\n", results.Latencies.Max.Seconds())
 
 	return nil
 }
