@@ -162,7 +162,7 @@ func TestK8sDeployer(t *testing.T) {
 		err = d.tfPluginClient.State.AssignNodesIPRange(&k8sCluster)
 		assert.NoError(t, err)
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &k8sCluster)
+		dls, err := d.generateVersionlessDeployments(&k8sCluster)
 		assert.NoError(t, err)
 
 		nodeWorkloads := make(map[uint32][]gridtypes.Workload)
@@ -190,7 +190,7 @@ func TestK8sDeployer(t *testing.T) {
 		err = d.tfPluginClient.State.AssignNodesIPRange(&k8sCluster)
 		assert.NoError(t, err)
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &k8sCluster)
+		dls, err := d.generateVersionlessDeployments(&k8sCluster)
 		assert.NoError(t, err)
 
 		k8sMockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl, d)
@@ -217,7 +217,7 @@ func TestK8sDeployer(t *testing.T) {
 		err = d.tfPluginClient.State.AssignNodesIPRange(&k8sCluster)
 		assert.NoError(t, err)
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &k8sCluster)
+		dls, err := d.generateVersionlessDeployments(&k8sCluster)
 		assert.NoError(t, err)
 
 		k8sMockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl, d)
@@ -254,7 +254,7 @@ func TestK8sDeployer(t *testing.T) {
 		err = d.tfPluginClient.State.AssignNodesIPRange(&k8sCluster)
 		assert.NoError(t, err)
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &k8sCluster)
+		dls, err := d.generateVersionlessDeployments(&k8sCluster)
 		assert.NoError(t, err)
 
 		k8sMockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl, d)

@@ -66,6 +66,8 @@ type TFPluginClient struct {
 	Calculator calculator.Calculator
 
 	cancelRelayContext context.CancelFunc
+
+	sentry gridSentry
 }
 
 type pluginCfg struct {
@@ -288,6 +290,12 @@ func NewTFPluginClient(
 	if err := backoff.Retry(check, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 5)); err != nil {
 		return TFPluginClient{}, errors.Wrapf(err, "only verified users can deploy, please visit https://dashboard.grid.tf/ to verify your account")
 	}
+
+	gridSentry, err := initSentry(twinID, cfg.network)
+	if err != nil {
+		return TFPluginClient{}, errors.Wrap(err, "sentry init failed")
+	}
+	tfPluginClient.sentry = gridSentry
 
 	tfPluginClient.useRmbProxy = true
 	// if tfPluginClient.useRmbProxy

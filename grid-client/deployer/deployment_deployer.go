@@ -31,12 +31,12 @@ func NewDeploymentDeployer(tfPluginClient *TFPluginClient) DeploymentDeployer {
 // Validate validates a deployment deployer
 func (d *DeploymentDeployer) Validate(ctx context.Context, dls []*workloads.Deployment) error {
 	if err := validateAccountBalanceForExtrinsics(d.tfPluginClient.SubstrateConn, d.tfPluginClient.Identity); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	for _, dl := range dls {
 		if err := dl.Validate(); err != nil {
-			return err
+			return d.tfPluginClient.sentry.error(err)
 		}
 	}
 
@@ -44,7 +44,7 @@ func (d *DeploymentDeployer) Validate(ctx context.Context, dls []*workloads.Depl
 }
 
 // GenerateVersionlessDeployments generates a new deployment without a version
-func (d *DeploymentDeployer) GenerateVersionlessDeployments(ctx context.Context, dls []*workloads.Deployment) (map[uint32][]zos.Deployment, error) {
+func (d *DeploymentDeployer) generateVersionlessDeployments(ctx context.Context, dls []*workloads.Deployment) (map[uint32][]zos.Deployment, error) {
 	gridDlsPerNodes := make(map[uint32][]zos.Deployment)
 
 	var wg sync.WaitGroup
@@ -107,16 +107,16 @@ func (d *DeploymentDeployer) GenerateVersionlessDeployments(ctx context.Context,
 // Deploy deploys a new deployment
 func (d *DeploymentDeployer) Deploy(ctx context.Context, dl *workloads.Deployment) error {
 	if err := d.Validate(ctx, []*workloads.Deployment{dl}); err != nil {
-		return fmt.Errorf("invalid deployment: %w", err)
+		return d.tfPluginClient.sentry.error(fmt.Errorf("invalid deployment: %w", err))
 	}
 
-	dlsPerNodes, err := d.GenerateVersionlessDeployments(ctx, []*workloads.Deployment{dl})
+	dlsPerNodes, err := d.generateVersionlessDeployments(ctx, []*workloads.Deployment{dl})
 	if err != nil {
-		return errors.Wrap(err, "could not generate deployments data")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not generate deployments data"))
 	}
 
 	if len(dlsPerNodes[dl.NodeID]) == 0 {
-		return fmt.Errorf("failed to generate the grid deployment")
+		return d.tfPluginClient.sentry.error(fmt.Errorf("failed to generate the grid deployment"))
 	}
 
 	dl.NodeDeploymentID, err = d.deployer.Deploy(
@@ -132,7 +132,7 @@ func (d *DeploymentDeployer) Deploy(ctx context.Context, dl *workloads.Deploymen
 		d.tfPluginClient.State.StoreContractIDs(dl.NodeID, dl.ContractID)
 	}
 
-	return err
+	return d.tfPluginClient.sentry.error(err)
 }
 
 // BatchDeploy deploys multiple deployments using the deployer
@@ -144,13 +144,13 @@ func (d *DeploymentDeployer) BatchDeploy(ctx context.Context, dls []*workloads.D
 		multiErr = multierror.Append(multiErr, fmt.Errorf("invalid deployments: %w", err))
 	}
 
-	newDeployments, err := d.GenerateVersionlessDeployments(ctx, dls)
+	newDeployments, err := d.generateVersionlessDeployments(ctx, dls)
 	if err != nil {
 		multiErr = multierror.Append(multiErr, fmt.Errorf("could not generate grid deployments: %w", err))
 	}
 
 	if len(newDeployments) == 0 {
-		return errors.Wrap(multiErr, "failed to generate the grid deployments")
+		return d.tfPluginClient.sentry.error(errors.Wrap(multiErr, "failed to generate the grid deployments"))
 	}
 
 	newDls, err := d.deployer.BatchDeploy(ctx, newDeployments, newDeploymentsSolutionProvider)
@@ -166,18 +166,18 @@ func (d *DeploymentDeployer) BatchDeploy(ctx context.Context, dls []*workloads.D
 		}
 	}
 
-	return multiErr
+	return d.tfPluginClient.sentry.error(multiErr)
 }
 
 // Cancel cancels deployments
 func (d *DeploymentDeployer) Cancel(ctx context.Context, dl *workloads.Deployment) error {
 	if err := d.Validate(ctx, []*workloads.Deployment{dl}); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	err := d.deployer.Cancel(ctx, dl.ContractID)
 	if err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	// update state
@@ -374,11 +374,11 @@ func (d *DeploymentDeployer) syncContract(dl *workloads.Deployment) error {
 func (d *DeploymentDeployer) Sync(ctx context.Context, dl *workloads.Deployment) error {
 	err := d.syncContract(dl)
 	if err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 	currentDeployments, err := d.deployer.GetDeployments(ctx, dl.NodeDeploymentID)
 	if err != nil {
-		return errors.Wrap(err, "failed to get deployments to update local state")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to get deployments to update local state"))
 	}
 
 	deployment := currentDeployments[dl.NodeID]

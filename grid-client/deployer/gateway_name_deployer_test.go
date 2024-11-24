@@ -106,7 +106,7 @@ func TestNameDeployer(t *testing.T) {
 	})
 
 	t.Run("test generate", func(t *testing.T) {
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(&gw)
 		assert.NoError(t, err)
 
 		testDl := workloads.NewGridDeployment(twinID, 0, []zosTypes.Workload{
@@ -131,7 +131,7 @@ func TestNameDeployer(t *testing.T) {
 	})
 
 	t.Run("test deploy", func(t *testing.T) {
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(&gw)
 		assert.NoError(t, err)
 
 		mockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl)
@@ -161,7 +161,7 @@ func TestNameDeployer(t *testing.T) {
 		gw.NameContractID = nameContractID
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(&gw)
 		assert.NoError(t, err)
 
 		mockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl)
@@ -189,7 +189,7 @@ func TestNameDeployer(t *testing.T) {
 		gw.NameContractID = nameContractID
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(&gw)
 		assert.NoError(t, err)
 
 		mockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl)
@@ -292,7 +292,7 @@ func TestNameDeployer(t *testing.T) {
 			gw.NameContractID,
 		).Return(true, nil)
 
-		err := d.syncContracts(context.Background(), &gw)
+		err := d.syncContracts(&gw)
 		assert.NoError(t, err)
 		assert.Equal(t, gw.NodeDeploymentID, map[uint32]uint64{nodeID: contractID})
 		assert.Equal(t, gw.ContractID, contractID)
@@ -313,7 +313,7 @@ func TestNameDeployer(t *testing.T) {
 			gw.NameContractID,
 		).Return(false, nil)
 
-		err := d.syncContracts(context.Background(), &gw)
+		err := d.syncContracts(&gw)
 		assert.NoError(t, err)
 		assert.Equal(t, gw.NodeDeploymentID, map[uint32]uint64{})
 		assert.Equal(t, gw.NameContractID, uint64(0))
@@ -329,7 +329,7 @@ func TestNameDeployer(t *testing.T) {
 			gw.NodeDeploymentID,
 		).Return(errors.New("error"))
 
-		err := d.syncContracts(context.Background(), &gw)
+		err := d.syncContracts(&gw)
 		assert.Error(t, err)
 		assert.Equal(t, gw.NodeDeploymentID, map[uint32]uint64{nodeID: contractID})
 		assert.Equal(t, gw.NameContractID, nameContractID)
@@ -341,7 +341,7 @@ func TestNameDeployer(t *testing.T) {
 		gw.NameContractID = nameContractID
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(&gw)
 		assert.NoError(t, err)
 
 		dl := dls[nodeID]
@@ -378,7 +378,7 @@ func TestNameDeployer(t *testing.T) {
 		gw.ContractID = contractID
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(&gw)
 		assert.NoError(t, err)
 		dl := dls[nodeID]
 		// state is deleted
