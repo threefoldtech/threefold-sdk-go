@@ -6,7 +6,7 @@ import (
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
-	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go/peer"
+	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go"
 	"github.com/threefoldtech/zos/pkg/diagnostics"
 )
 
@@ -31,7 +31,7 @@ func (w *HealthWork) Finders() map[string]time.Duration {
 	return w.findersInterval
 }
 
-func (w *HealthWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32) ([]types.HealthReport, error) {
+func (w *HealthWork) Get(ctx context.Context, rmb rmb.Client, twinId uint32) ([]types.HealthReport, error) {
 	var diagnostics diagnostics.Diagnostics
 	_ = callNode(ctx, rmb, healthCallCmd, nil, twinId, &diagnostics)
 	res := getHealthReport(diagnostics, twinId)

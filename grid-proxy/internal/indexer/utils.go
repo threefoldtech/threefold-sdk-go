@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
-	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go/peer"
+	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go"
 )
 
 func queryUpNodes(ctx context.Context, database db.Database, nodeTwinIdChan chan uint32) {
@@ -44,7 +44,7 @@ func queryHealthyNodes(ctx context.Context, database db.Database, nodeTwinIdChan
 	}
 }
 
-func callNode(ctx context.Context, rmbClient *peer.RpcClient, cmd string, payload interface{}, twinId uint32, result interface{}) error {
+func callNode(ctx context.Context, rmbClient rmb.Client, cmd string, payload interface{}, twinId uint32, result interface{}) error {
 	subCtx, cancel := context.WithTimeout(ctx, indexerCallTimeout)
 	defer cancel()
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
-	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go/peer"
+	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 
 type Work[T any] interface {
 	Finders() map[string]time.Duration
-	Get(ctx context.Context, rmb *peer.RpcClient, id uint32) ([]T, error)
+	Get(ctx context.Context, rmb rmb.Client, id uint32) ([]T, error)
 	Upsert(ctx context.Context, db db.Database, batch []T) error
 }
 
@@ -27,7 +27,7 @@ type Indexer[T any] struct {
 	name       string
 	work       Work[T]
 	dbClient   db.Database
-	rmbClient  *peer.RpcClient
+	rmbClient  rmb.Client
 	idChan     chan uint32
 	resultChan chan T
 	batchChan  chan []T
@@ -38,7 +38,7 @@ func NewIndexer[T any](
 	work Work[T],
 	name string,
 	db db.Database,
-	rmb *peer.RpcClient,
+	rmb rmb.Client,
 	worker uint,
 ) *Indexer[T] {
 	return &Indexer[T]{
