@@ -10,14 +10,31 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+
 func TestMain(m *testing.M) {
 
+	Setup()
+	code := m.Run()
+	os.Exit(code)
+
+}
+func Setup() {
 	// Connect to the default `postgres` database to create `testdb`
 	initialDb, err := NewPostgresDatabase("localhost", 5432, "postgres", "mypassword", "postgres", 80, logger.Error)
 	if err != nil {
 		log.Fatalf("could not connect to default database: %v", err)
 	}
 	defer initialDb.Close()
+	// Force close all connections to testdb before dropping
+    err = initialDb.gormDB.Exec(`
+        SELECT pg_terminate_backend(pg_stat_activity.pid)
+        FROM pg_stat_activity
+        WHERE pg_stat_activity.datname = 'testdb'
+        AND pid <> pg_backend_pid();
+    `).Error
+	if err != nil {
+        log.Printf("warning while terminating connections: %v", err)
+    }
 
 	// drop the `testdb` database
 	err = initialDb.gormDB.Exec(`DROP DATABASE IF EXISTS testdb;`).Error
@@ -73,7 +90,4 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("could not populate db: %v", err)
 	}
-	code := m.Run()
-	os.Exit(code)
-
 }

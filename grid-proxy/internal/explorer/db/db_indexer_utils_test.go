@@ -84,6 +84,8 @@ func TestPostgresDatabase_GetHealthyNodeTwinIds(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Get node twin IDs after a certain twin ID", func(t *testing.T) {
 
@@ -96,7 +98,6 @@ func TestPostgresDatabase_GetHealthyNodeTwinIds(t *testing.T) {
 
 		nodeTwinIDs, err := dbTest.GetHealthyNodeTwinIds(ctx)
 		assert.NoError(t, err)
-		// it depend on whether run first or not
 		assert.Contains(t, nodeTwinIDs, uint32(112))
 		assert.Contains(t, nodeTwinIDs, uint32(113))
 	})

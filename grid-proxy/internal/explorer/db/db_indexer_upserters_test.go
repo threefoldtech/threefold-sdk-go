@@ -17,6 +17,8 @@ func TestPostgresDatabase_UpsertNodesGPU(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Nodes GPU", func(t *testing.T) {
 		//take care not to interfere with other tests like (TestPostgresDatabase_DeleteOldGpus)
@@ -45,6 +47,8 @@ func TestPostgresDatabase_UpsertNodeHealth(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Node Health", func(t *testing.T) {
 		healthReports := []types.HealthReport{
@@ -72,6 +76,8 @@ func TestPostgresDatabase_UpsertNodeDmi(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Node DMI", func(t *testing.T) {
 		dmis := []types.Dmi{
@@ -147,6 +153,8 @@ func TestPostgresDatabase_UpsertNetworkSpeed(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Network Speed", func(t *testing.T) {
 		speeds := []types.Speed{
@@ -176,6 +184,8 @@ func TestPostgresDatabase_UpsertNodeIpv6Report(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Node IPv6 Report", func(t *testing.T) {
 		ips := []types.HasIpv6{
@@ -205,6 +215,8 @@ func TestPostgresDatabase_UpsertNodeWorkloads(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Node Workloads", func(t *testing.T) {
 		workloads := []types.NodesWorkloads{
@@ -234,6 +246,8 @@ func TestPostgresDatabase_GetLastUpsertsTimestamp(t *testing.T) {
 		t.Skipf("Can't connect to testdb: %v", err)
 	}
 	ctx := context.Background()
+	defer dbTest.Close()
+	defer Setup()
 
 	t.Run("Upsert Node Workloads", func(t *testing.T) {
 		currTime := time.Now().Unix()
