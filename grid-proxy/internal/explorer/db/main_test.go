@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-
 func TestMain(m *testing.M) {
 
 	Setup()
@@ -26,15 +25,15 @@ func Setup() {
 	}
 	defer initialDb.Close()
 	// Force close all connections to testdb before dropping
-    err = initialDb.gormDB.Exec(`
+	err = initialDb.gormDB.Exec(`
         SELECT pg_terminate_backend(pg_stat_activity.pid)
         FROM pg_stat_activity
         WHERE pg_stat_activity.datname = 'testdb'
         AND pid <> pg_backend_pid();
     `).Error
 	if err != nil {
-        log.Printf("warning while terminating connections: %v", err)
-    }
+		log.Printf("warning while terminating connections: %v", err)
+	}
 
 	// drop the `testdb` database
 	err = initialDb.gormDB.Exec(`DROP DATABASE IF EXISTS testdb;`).Error
