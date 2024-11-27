@@ -7,7 +7,7 @@
 //
 
 // Package mock_rmb is a generated GoMock package.
-package mock_rmb
+package mocks
 
 import (
 	context "context"

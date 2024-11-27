@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	mock_rmb "github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/mocks"
+	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 	zosDmiTypes "github.com/threefoldtech/zos/pkg/capacity/dmi"
 )
 
@@ -120,6 +121,7 @@ func TestDMIGet(t *testing.T) {
 		assert.Equal(t, expected.Sections[2].SubSections[0].Properties["Thread Count"].Val, got[0].Processor[0].ThreadCount)
 		assert.Equal(t, expected.Sections[3].SubSections[0].Properties["Manufacturer"].Val, got[0].Memory[0].Manufacturer)
 		assert.Equal(t, expected.Sections[3].SubSections[0].Properties["Type"].Val, got[0].Memory[0].Type)
+		assert.IsTypef(t, got, []types.Dmi{}, "got: %T , expected: %T", got, []types.Dmi{})
 
 	})
 
