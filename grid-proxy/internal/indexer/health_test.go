@@ -77,7 +77,7 @@ func TestRemoveDuplicates(t *testing.T) {
 
 	result := removeDuplicates(reports)
 	assert.Len(t, result, 3)
-	assert.Contains(t,result, reports[0])
-	assert.Contains(t,result, reports[1])
-	assert.Contains(t,result, reports[3])
+	assert.Contains(t, result, reports[0])
+	assert.Contains(t, result, reports[1])
+	assert.Contains(t, result, reports[3])
 }

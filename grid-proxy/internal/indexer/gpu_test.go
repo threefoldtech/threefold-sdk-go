@@ -11,10 +11,7 @@ import (
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 )
 
-
-
-
-func TestNewGPUWork(t *testing.T){
+func TestNewGPUWork(t *testing.T) {
 	wanted := &GPUWork{
 		findersInterval: map[string]time.Duration{
 			"up":  2 * time.Minute,
