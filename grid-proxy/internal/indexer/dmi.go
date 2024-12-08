@@ -44,7 +44,6 @@ func (w *DMIWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32) (
 
 	res := parseDmiResponse(dmi, twinId)
 	return []types.Dmi{res}, nil
-
 }
 
 func (w *DMIWork) Upsert(ctx context.Context, db db.Database, batch []types.Dmi) error {
@@ -74,7 +73,7 @@ func parseDmiResponse(dmiResponse zosDmiTypes.DMI, twinId uint32) types.Dmi {
 					}
 
 					// proper unknown memory type
-					memType := "lol"
+					memType := subSec.Properties["Type"].Val
 					if memType == outOfSpec {
 						memType = unknown
 					}
