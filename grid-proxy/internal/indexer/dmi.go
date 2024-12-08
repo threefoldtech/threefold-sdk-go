@@ -12,6 +12,10 @@ import (
 
 const (
 	DmiCallCmd = "zos.system.dmi"
+
+	outOfSpec = "<OUT OF SPEC>"
+	unknown   = "Unknown"
+	other     = "Other"
 )
 
 type DMIWork struct {
@@ -40,7 +44,6 @@ func (w *DMIWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32) (
 
 	res := parseDmiResponse(dmi, twinId)
 	return []types.Dmi{res}, nil
-
 }
 
 func (w *DMIWork) Upsert(ctx context.Context, db db.Database, batch []types.Dmi) error {
@@ -63,11 +66,20 @@ func parseDmiResponse(dmiResponse zosDmiTypes.DMI, twinId uint32) types.Dmi {
 		if sec.TypeStr == "MemoryDevice" {
 			for _, subSec := range sec.SubSections {
 				if subSec.Title == "Memory Device" {
-					if subSec.Properties["Type"].Val == "Unknown" {
+					// skips the empty slots
+					if subSec.Properties["Type"].Val == other &&
+						subSec.Properties["Manufacturer"].Val == unknown {
 						continue
 					}
+
+					// proper unknown memory type
+					memType := subSec.Properties["Type"].Val
+					if memType == outOfSpec {
+						memType = unknown
+					}
+
 					info.Memory = append(info.Memory, types.Memory{
-						Type:         subSec.Properties["Type"].Val,
+						Type:         memType,
 						Manufacturer: subSec.Properties["Manufacturer"].Val,
 					})
 				}
