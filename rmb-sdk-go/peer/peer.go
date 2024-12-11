@@ -229,12 +229,6 @@ func NewPeer(
 
 	if !bytes.Equal(twin.E2EKey, publicKey) || twin.Relay == nil || joinURLs != *twin.Relay {
 		log.Info().Str("Relay url/s", joinURLs).Msg("twin relay/public key didn't match, updating on chain ...")
-		subConn, err := subManager.Substrate()
-		if err != nil {
-			return nil, errors.Wrap(err, "could not start substrate connection")
-		}
-		defer subConn.Close()
-
 		if _, err = subConn.UpdateTwin(identity, joinURLs, publicKey); err != nil {
 			return nil, errors.Wrap(err, "could not update twin relay information")
 		}
