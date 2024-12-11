@@ -17,11 +17,14 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/rs/zerolog/log"
 	client "github.com/threefoldtech/tfchain/clients/tfchain-client-go"
+	substrate "github.com/threefoldtech/tfchain/clients/tfchain-client-go"
 	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go/peer"
 )
 
-type address string
-type network string
+type (
+	address string
+	network string
+)
 
 type config struct {
 	testMnemonic         string `env:"TESTNET_MNEMONIC"`
@@ -364,7 +367,8 @@ func (m *Monitor) systemVersion(ctx context.Context) (map[network]version, map[n
 
 		for _, NodeID := range randomNodes {
 			log.Debug().Msgf("check node %d", NodeID)
-			ver, working, failed, err := m.checkNodeSystemVersion(ctx, NodeID, network)
+			ver, working, failed, err := m.checkNodeSystemVersion(ctx, con, NodeID, network)
+
 			failedNodes[network] = append(failedNodes[network], failed...)
 			if err != nil {
 				log.Error().Err(err).Msgf("check node %d failed", NodeID)
@@ -379,17 +383,11 @@ func (m *Monitor) systemVersion(ctx context.Context) (map[network]version, map[n
 	return versions, workingNodes, failedNodes
 }
 
-func (m *Monitor) checkNodeSystemVersion(ctx context.Context, NodeID uint32, net network) (version, []uint32, []uint32, error) {
+func (m *Monitor) checkNodeSystemVersion(ctx context.Context, con *substrate.Substrate, NodeID uint32, net network) (version, []uint32, []uint32, error) {
 	const cmd = "zos.system.version"
 	var ver version
 	var workingNodes []uint32
 	var failedNodes []uint32
-
-	con, err := m.managers[net].Substrate()
-	if err != nil {
-		return version{}, []uint32{}, []uint32{}, fmt.Errorf("substrate connection for %v network failed with error: %w", NodeID, err)
-	}
-	defer con.Close()
 
 	node, err := con.GetNode(NodeID)
 	if err != nil {
