@@ -309,7 +309,7 @@ func NewTFPluginClient(
 	}
 
 	if !cfg.rmbInMemCache {
-		peerOpts = append(peerOpts, peer.WithTwinCache(10*60*60)) // in seconds that's 10 hours
+		peerOpts = append(peerOpts, peer.WithTmpCacheExpiration(10*60*60)) // in seconds that's 10 hours
 	}
 	rmbClient, err := peer.NewRpcClient(ctx, tfPluginClient.mnemonicOrSeed, manager, peerOpts...)
 	if err != nil {

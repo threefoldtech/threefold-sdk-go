@@ -65,7 +65,7 @@ func main() {
 		handler,
 		peer.WithKeyType(peer.KeyTypeSr25519),
 		peer.WithSession("rmb-playground999"),
-		peer.WithTwinCache(10*60*60), // in seconds that's 10 hours
+		peer.WithInMemoryExpiration(10*60*60), // in seconds that's 10 hours
 	)
 
 	if err != nil {
