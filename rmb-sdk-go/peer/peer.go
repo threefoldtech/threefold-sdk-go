@@ -150,8 +150,8 @@ func NewPeer(
 	mnemonics string,
 	subManager substrate.Manager,
 	handler Handler,
-	opts ...PeerOpt) (*Peer, error) {
-
+	opts ...PeerOpt,
+) (*Peer, error) {
 	cfg := &peerCfg{
 		relayURLs:        []string{"wss://relay.grid.tf"},
 		session:          "",
@@ -179,7 +179,7 @@ func NewPeer(
 		return nil, err
 	}
 
-	api, _, err := subManager.Raw()
+	api, _, err := subConn.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,6 @@ func NewPeer(
 		privKey, err = generateSecureKey(identity)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not generate secure key")
-
 		}
 		publicKey = privKey.PubKey().SerializeCompressed()
 	}
@@ -481,7 +480,6 @@ func (d *Peer) makeEnvelope(id string, dest uint32, session *string, cmd *string
 	}
 
 	return &env, nil
-
 }
 
 func (d *Peer) send(ctx context.Context, request *types.Envelope) error {
