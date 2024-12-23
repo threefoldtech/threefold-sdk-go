@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/threefoldtech/tfchain/clients/tfchain-client-go v0.0.0-20241007205731-5e76664a3cc4
 	gonum.org/v1/gonum v0.15.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.36.1
 )
 
 require (
