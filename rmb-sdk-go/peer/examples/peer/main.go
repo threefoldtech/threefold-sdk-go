@@ -26,6 +26,7 @@ func app() error {
 		relayCallback,
 		peer.WithRelay("wss://relay.dev.grid.tf"),
 		peer.WithSession("test-client"),
+		peer.WithInMemoryExpiration(6*60*60), // six hours
 	)
 
 	if err != nil {

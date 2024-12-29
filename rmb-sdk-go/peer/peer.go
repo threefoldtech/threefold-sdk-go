@@ -88,11 +88,20 @@ func WithEncoder(encoder encoder.Encoder) PeerOpt {
 }
 
 // WithTwinCache cache twin information for this ttl number of seconds
-// by default twins are cached in memory forever
-func WithTwinCache(ttl uint64) PeerOpt {
+// if ttl == 0, twins are cached forever
+func WithTmpCacheExpiration(ttl uint64) PeerOpt {
 	return func(pc *peerCfg) {
 		pc.cacheFactory = func(inner TwinDB, chainURL string) (TwinDB, error) {
 			return newTmpCache(ttl, inner, chainURL)
+		}
+	}
+}
+
+// if ttl == 0 twins are cached forever
+func WithInMemoryExpiration(ttl uint64) PeerOpt {
+	return func(pc *peerCfg) {
+		pc.cacheFactory = func(inner TwinDB, chainURL string) (TwinDB, error) {
+			return newInMemoryCache(inner, ttl), nil
 		}
 	}
 }
@@ -158,7 +167,7 @@ func NewPeer(
 		enableEncryption: true,
 		keyType:          KeyTypeSr25519,
 		cacheFactory: func(inner TwinDB, _ string) (TwinDB, error) {
-			return newInMemoryCache(inner), nil
+			return newInMemoryCache(inner, 0), nil
 		},
 	}
 

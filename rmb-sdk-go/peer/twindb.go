@@ -30,6 +30,7 @@ type Twin struct {
 	PublicKey []byte
 	Relay     *string
 	E2EKey    []byte
+	Timestamp uint64
 }
 
 type twinDB struct {
@@ -71,32 +72,43 @@ func (t *twinDB) GetByPk(pk []byte) (uint32, error) {
 	return t.subConn.GetTwinByPubKey(pk)
 }
 
+// if ttl == 0, then the data will stay forever
 type inMemoryCache struct {
 	cache map[uint32]Twin
 	inner TwinDB
 	m     sync.RWMutex
+	ttl   uint64
 }
 
-func newInMemoryCache(inner TwinDB) TwinDB {
+func newInMemoryCache(inner TwinDB, ttl uint64) TwinDB {
 	return &inMemoryCache{
 		cache: make(map[uint32]Twin),
 		inner: inner,
+		ttl:   ttl,
 	}
+}
+
+func (twin *Twin) isExpired(ttl uint64) bool {
+	age := uint64(time.Now().Unix()) - twin.Timestamp
+	if ttl != 0 && age > ttl {
+		log.Trace().Uint64("age", age).Msg("twin cache hit but expired")
+		return true
+	}
+	return false
 }
 
 func (m *inMemoryCache) Get(id uint32) (twin Twin, err error) {
 	m.m.RLock()
 	twin, ok := m.cache[id]
 	m.m.RUnlock()
-	if ok {
+	if ok && !twin.isExpired(m.ttl) {
 		return twin, nil
 	}
-
 	twin, err = m.inner.Get(id)
 	if err != nil {
 		return Twin{}, errors.Wrapf(err, "could not get twin with id %d", id)
 	}
-
+	twin.Timestamp = uint64(time.Now().Unix())
 	m.m.Lock()
 	m.cache[id] = twin
 	m.m.Unlock()
@@ -106,11 +118,6 @@ func (m *inMemoryCache) Get(id uint32) (twin Twin, err error) {
 
 func (m *inMemoryCache) GetByPk(pk []byte) (uint32, error) {
 	return m.inner.GetByPk(pk)
-}
-
-type cachedTwin struct {
-	Twin
-	Timestamp uint64
 }
 
 type tmpCache struct {
@@ -136,7 +143,7 @@ func newTmpCache(ttl uint64, inner TwinDB, chainURL string) (TwinDB, error) {
 	}, nil
 }
 
-func (r *tmpCache) get(path string) (twin cachedTwin, err error) {
+func (r *tmpCache) get(path string) (twin Twin, err error) {
 	data, err := os.ReadFile(path)
 
 	if os.IsNotExist(err) {
@@ -151,10 +158,7 @@ func (r *tmpCache) get(path string) (twin cachedTwin, err error) {
 		// crash on file corruption
 		return twin, errNoCache
 	}
-
-	age := uint64(time.Now().Unix()) - twin.Timestamp
-	if age > r.ttl {
-		log.Trace().Uint64("age", age).Msg("twin cache hit but expired")
+	if twin.isExpired(r.ttl) {
 		return twin, errNoCache
 	}
 
@@ -163,10 +167,7 @@ func (r *tmpCache) get(path string) (twin cachedTwin, err error) {
 }
 
 func (r *tmpCache) set(path string, twin Twin) error {
-	data, err := json.Marshal(cachedTwin{
-		Twin:      twin,
-		Timestamp: uint64(time.Now().Unix()),
-	})
+	data, err := json.Marshal(twin)
 
 	if err != nil {
 		return err
@@ -178,13 +179,14 @@ func (r *tmpCache) set(path string, twin Twin) error {
 func (r *tmpCache) Get(id uint32) (twin Twin, err error) {
 	path := filepath.Join(r.base, fmt.Sprint(id))
 
-	cached, err := r.get(path)
+	twin, err = r.get(path)
 	if err == errNoCache {
 		twin, err = r.inner.Get(id)
 		if err != nil {
 			return twin, err
 		}
 		// set cache
+		twin.Timestamp = uint64(time.Now().Unix())
 		if err := r.set(path, twin); err != nil {
 			log.Error().Err(err).Msg("failed to warm up cache")
 		}
@@ -193,7 +195,7 @@ func (r *tmpCache) Get(id uint32) (twin Twin, err error) {
 		return twin, err
 	}
 
-	return cached.Twin, nil
+	return twin, nil
 }
 
 func (r *tmpCache) GetByPk(pk []byte) (uint32, error) {
