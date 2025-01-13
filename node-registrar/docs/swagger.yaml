@@ -1,0 +1,378 @@
+definitions:
+  db.Farm:
+    properties:
+      dedicated:
+        type: boolean
+      farm_free_ips:
+        type: integer
+      farm_id:
+        description: Primary key
+        type: integer
+      farm_name:
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/db.Node'
+        type: array
+      twin_id:
+        type: integer
+    type: object
+  db.Node:
+    properties:
+      consumption:
+        type: string
+      dedicated:
+        type: boolean
+      extra_fee:
+        type: integer
+      farm_id:
+        type: integer
+      features:
+        items:
+          type: string
+        type: array
+      healthy:
+        type: boolean
+      node_id:
+        type: integer
+      price_usd:
+        type: number
+      rentable:
+        type: boolean
+      rented:
+        type: boolean
+      status:
+        type: string
+      twin_id:
+        type: integer
+      uptime:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /farm/{farm_id}:
+    get:
+      consumes:
+      - application/json
+      description: get a farm with specific id
+      parameters:
+      - description: farm id
+        in: path
+        name: farm_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Farm'
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: get farm
+  /farms/:
+    get:
+      consumes:
+      - application/json
+      description: list farms with specific filter
+      parameters:
+      - description: farm name
+        in: query
+        name: farm_name
+        type: string
+      - description: farm id
+        in: query
+        name: farm_id
+        type: integer
+      - description: twin id
+        in: query
+        name: twin_id
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Max result per page
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Farm'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: list farms
+    patch:
+      consumes:
+      - application/json
+      description: update a farm
+      parameters:
+      - description: farm id
+        in: body
+        name: farm_id
+        required: true
+        schema:
+          type: integer
+      - description: farm name
+        in: body
+        name: farm_name
+        schema:
+          type: integer
+      - description: twin id
+        in: body
+        name: twin_id
+        schema:
+          type: integer
+      - description: dedicated farm
+        in: body
+        name: dedicated
+        schema:
+          type: boolean
+      - description: farm free ips
+        in: body
+        name: farm_free_ips
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Farm'
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: update a farm
+    post:
+      consumes:
+      - application/json
+      description: creates a farm
+      parameters:
+      - description: farm id
+        in: body
+        name: farm_id
+        required: true
+        schema:
+          type: integer
+      - description: farm name
+        in: body
+        name: farm_name
+        required: true
+        schema:
+          type: integer
+      - description: twin id
+        in: body
+        name: twin_id
+        required: true
+        schema:
+          type: integer
+      - description: dedicated farm
+        in: body
+        name: dedicated
+        schema:
+          type: boolean
+      - description: farm free ips
+        in: body
+        name: farm_free_ips
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Farm'
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: create a farm
+  /nodes/:
+    get:
+      consumes:
+      - application/json
+      description: list nodes with specific filter
+      parameters:
+      - description: node id
+        in: query
+        name: node_id
+        type: integer
+      - description: farm id
+        in: query
+        name: farm_id
+        type: integer
+      - description: twin id
+        in: query
+        name: twin_id
+        type: integer
+      - description: node status
+        in: query
+        name: status
+        type: string
+      - description: is node healthy
+        in: query
+        name: healthy
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Max result per page
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Node'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: list nodes
+    post:
+      consumes:
+      - application/json
+      description: register a node
+      parameters:
+      - description: node id
+        in: body
+        name: node_id
+        required: true
+        schema:
+          type: integer
+      - description: farm id
+        in: body
+        name: farm_id
+        required: true
+        schema:
+          type: integer
+      - description: twin id
+        in: body
+        name: twin_id
+        required: true
+        schema:
+          type: integer
+      - description: 'node features '
+        in: body
+        name: features
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: node status
+        in: body
+        name: status
+        schema:
+          type: string
+      - description: node healthy
+        in: body
+        name: healthy
+        schema:
+          type: boolean
+      - description: node dedicated
+        in: body
+        name: dedicated
+        schema:
+          type: boolean
+      - description: node rented
+        in: body
+        name: rented
+        schema:
+          type: boolean
+      - description: node rentable
+        in: body
+        name: rentable
+        schema:
+          type: boolean
+      - description: price in usd
+        in: body
+        name: price_usd
+        schema:
+          type: number
+      - description: uptime report
+        in: body
+        name: uptime
+        schema:
+          type: integer
+      - description: consumption report
+        in: body
+        name: consumption
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Node'
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: register a node
+  /nodes/{node_id}:
+    get:
+      consumes:
+      - application/json
+      description: get a node with specific id
+      parameters:
+      - description: node id
+        in: path
+        name: node_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Node'
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: get node
+  /nodes/{node_id}/uptime:
+    post:
+      consumes:
+      - application/json
+      description: save consumption report of a node
+      parameters:
+      - description: node id
+        in: query
+        name: node_id
+        required: true
+        type: integer
+      - description: consumption report
+        in: body
+        name: consumption
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+      summary: consumption report
+swagger: "2.0"
