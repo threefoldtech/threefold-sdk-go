@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -48,6 +49,7 @@ func (s Server) listFarmsHandler(c *gin.Context) {
 // @Produce  json
 // @param farm_id path uint64 true "farm id"
 // @Success 200 {object} db.Farm
+// @Failure 404 {object} db.ErrRecordNotFound
 // @Failure 400 {object} error
 // @Router /farm/{farm_id} [get]
 func (s Server) getFarmHandler(c *gin.Context) {
@@ -61,6 +63,11 @@ func (s Server) getFarmHandler(c *gin.Context) {
 
 	farm, err := s.DB.GetFarm(id)
 	if err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -176,6 +183,7 @@ func (s Server) listNodesHandler(c *gin.Context) {
 // @Produce  json
 // @param node_id path uint64 false "node id"
 // @Success 200 {object} db.Node
+// @Failure 404 {object} db.ErrRecordNotFound
 // @Failure 400 {object} error
 // @Router /nodes/{node_id} [get]
 func (s Server) getNodeHandler(c *gin.Context) {
@@ -189,6 +197,11 @@ func (s Server) getNodeHandler(c *gin.Context) {
 
 	node, err := s.DB.GetNode(id)
 	if err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

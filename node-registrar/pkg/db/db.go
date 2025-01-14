@@ -26,6 +26,8 @@ type DataBase struct {
 	connString string
 }
 
+var ErrRecordNotFound = errors.New("could not find any records")
+
 func NewDB(c Config) (db DataBase, err error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode)

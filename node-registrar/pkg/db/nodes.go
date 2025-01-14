@@ -40,7 +40,7 @@ func (db *DataBase) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err
 func (db *DataBase) GetNode(nodeID uint64) (node Node, err error) {
 	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return node, nil
+			return node, ErrRecordNotFound
 		}
 		return node, result.Error
 	}

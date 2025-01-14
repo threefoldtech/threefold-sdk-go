@@ -1,5 +1,10 @@
 package db
 
+import (
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+)
+
 func (db *DataBase) ListFarms(filter FarmFilter, limit Limit) (farms []Farm, err error) {
 	query := db.gormDB.Model(&Farm{})
 
@@ -25,6 +30,9 @@ func (db *DataBase) ListFarms(filter FarmFilter, limit Limit) (farms []Farm, err
 
 func (db *DataBase) GetFarm(farmID uint64) (farm Farm, err error) {
 	if result := db.gormDB.First(&farm, farmID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return farm, ErrRecordNotFound
+		}
 		return farm, result.Error
 	}
 
