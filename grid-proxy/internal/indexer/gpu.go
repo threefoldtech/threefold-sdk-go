@@ -7,7 +7,7 @@ import (
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
-	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go/peer"
+	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go"
 )
 
 const (
@@ -31,7 +31,7 @@ func (w *GPUWork) Finders() map[string]time.Duration {
 	return w.findersInterval
 }
 
-func (w *GPUWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32) ([]types.NodeGPU, error) {
+func (w *GPUWork) Get(ctx context.Context, rmb rmb.Client, twinId uint32) ([]types.NodeGPU, error) {
 	var gpus []types.NodeGPU
 	err := callNode(ctx, rmb, gpuListCmd, nil, twinId, &gpus)
 	if err != nil {

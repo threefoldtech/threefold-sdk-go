@@ -6,7 +6,7 @@ import (
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/internal/explorer/db"
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
-	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go/peer"
+	"github.com/threefoldtech/tfgrid-sdk-go/rmb-sdk-go"
 )
 
 const cmd = "zos.network.has_ipv6"
@@ -29,7 +29,7 @@ func (w *Ipv6Work) Finders() map[string]time.Duration {
 	return w.finders
 }
 
-func (w *Ipv6Work) Get(ctx context.Context, rmb *peer.RpcClient, id uint32) ([]types.HasIpv6, error) {
+func (w *Ipv6Work) Get(ctx context.Context, rmb rmb.Client, id uint32) ([]types.HasIpv6, error) {
 	var has_ipv6 bool
 	if err := callNode(ctx, rmb, cmd, nil, id, &has_ipv6); err != nil {
 		return []types.HasIpv6{}, nil
