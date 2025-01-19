@@ -20,8 +20,10 @@ type Config struct {
 	PostgresPassword string
 	SSLMode          string
 	SqlLogLevel      logger.LogLevel
-	MaxConns         uint
+	MaxOpenConns     uint
 }
+
+const MaxIdleConns = 3
 
 // PostgresDatabase postgres db client
 type DataBase struct {
@@ -47,8 +49,8 @@ func NewDB(c Config) (db DataBase, err error) {
 		return db, errors.Wrap(err, "failed to configure DB connection")
 	}
 
-	sql.SetMaxIdleConns(3)
-	sql.SetMaxOpenConns(int(c.MaxConns))
+	sql.SetMaxIdleConns(MaxIdleConns)
+	sql.SetMaxOpenConns(int(c.MaxOpenConns))
 
 	db = DataBase{gormDB, dsn}
 

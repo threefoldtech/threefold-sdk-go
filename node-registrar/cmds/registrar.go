@@ -43,7 +43,7 @@ func Run() error {
 	flag.StringVar(&f.PostgresPassword, "postgres-password", "", "postgres password")
 	flag.StringVar(&f.SSLMode, "ssl-mode", "disable", "postgres ssl mode[disable, require, verify-ca, verify-full]")
 	flag.IntVar(&sqlLogLevel, "sql-log-level", 2, "sql logger level")
-	flag.UintVar(&f.MaxConns, "max-conn", 3, "max sql connections")
+	flag.UintVar(&f.MaxOpenConns, "max-conn", 3, "max sql connections")
 
 	flag.BoolVar(&f.version, "v", false, "shows the package version")
 	flag.BoolVar(&f.debug, "debug", false, "allow debug logs")
@@ -98,6 +98,3 @@ func (f flags) validate() error {
 
 	return f.Config.Validate()
 }
-
-// 
-// registar
