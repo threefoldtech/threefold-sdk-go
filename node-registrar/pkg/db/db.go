@@ -2,6 +2,9 @@ package db
 
 import (
 	"fmt"
+	"net"
+	"slices"
+	"strings"
 
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
@@ -10,14 +13,14 @@ import (
 )
 
 type Config struct {
-	Host        string
-	Port        int
-	DBName      string
-	User        string
-	Password    string
-	SSLMode     string
-	SqlLogLevel logger.LogLevel
-	MaxConns    int
+	PostgresHost     string
+	PostgresPort     uint
+	DBName           string
+	PostgresUser     string
+	PostgresPassword string
+	SSLMode          string
+	SqlLogLevel      logger.LogLevel
+	MaxConns         uint
 }
 
 // PostgresDatabase postgres db client
@@ -30,7 +33,7 @@ var ErrRecordNotFound = errors.New("could not find any records")
 
 func NewDB(c Config) (db DataBase, err error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode)
+		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.DBName, c.SSLMode)
 
 	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(c.SqlLogLevel),
@@ -45,7 +48,7 @@ func NewDB(c Config) (db DataBase, err error) {
 	}
 
 	sql.SetMaxIdleConns(3)
-	sql.SetMaxOpenConns(c.MaxConns)
+	sql.SetMaxOpenConns(int(c.MaxConns))
 
 	db = DataBase{gormDB, dsn}
 
@@ -56,4 +59,44 @@ func NewDB(c Config) (db DataBase, err error) {
 		return db, errors.Wrap(err, "failed to migrate tables")
 	}
 	return
+}
+
+func (c Config) Validate() error {
+	if strings.TrimSpace(c.PostgresHost) == "" {
+		return errors.New("invalid postgres host, postgres host should not be empty")
+	}
+
+	if net.ParseIP(c.PostgresHost) == nil {
+		if _, err := net.LookupHost(c.PostgresHost); err == nil {
+			return errors.Wrapf(err, "invalid postgres host %s, failed to parse or lookup host", c.PostgresHost)
+		}
+	}
+
+	if c.PostgresPort < 1 && c.PostgresPort > 65535 {
+		return errors.Errorf("invalid postgres port %d, postgres port should be in the valid port range 1–65535", c.PostgresPort)
+	}
+
+	if strings.TrimSpace(c.DBName) == "" {
+		return errors.New("invalid database name, database name should not be empty")
+	}
+
+	if strings.TrimSpace(c.PostgresUser) == "" {
+		return errors.New("invalid postgres user, postgres user should not be empty")
+	}
+
+	if strings.TrimSpace(c.PostgresPassword) == "" {
+		return errors.New("invalid postgres password, postgres password should not be empty")
+	}
+
+	sslModes := []string{"disable", "require", "verify-ca", "verify-full"}
+	if !slices.Contains(sslModes, c.SSLMode) {
+		return errors.New(fmt.Sprintf("invalid ssl mode %s, ssl mode should be one of %v", c.SSLMode, sslModes))
+	}
+
+	sqlLogLevel := map[int]string{1: "Silent", 2: "Error", 3: "Warn", 4: "Info"}
+	if c.SqlLogLevel < 0 || c.SqlLogLevel > 4 {
+		return errors.New(fmt.Sprintf("invalid sql log level %d, sql log level should be one of %v", c.SqlLogLevel, sqlLogLevel))
+	}
+
+	return nil
 }
