@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-envparse v0.1.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/threefoldtech/tfchain/clients/tfchain-client-go v0.0.0-20241007205731-5e76664a3cc4
 	gopkg.in/validator.v2 v2.0.1
 )

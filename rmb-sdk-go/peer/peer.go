@@ -88,11 +88,20 @@ func WithEncoder(encoder encoder.Encoder) PeerOpt {
 }
 
 // WithTwinCache cache twin information for this ttl number of seconds
-// by default twins are cached in memory forever
-func WithTwinCache(ttl uint64) PeerOpt {
+// if ttl == 0, twins are cached forever
+func WithTmpCacheExpiration(ttl uint64) PeerOpt {
 	return func(pc *peerCfg) {
 		pc.cacheFactory = func(inner TwinDB, chainURL string) (TwinDB, error) {
 			return newTmpCache(ttl, inner, chainURL)
+		}
+	}
+}
+
+// if ttl == 0 twins are cached forever
+func WithInMemoryExpiration(ttl uint64) PeerOpt {
+	return func(pc *peerCfg) {
+		pc.cacheFactory = func(inner TwinDB, chainURL string) (TwinDB, error) {
+			return newInMemoryCache(inner, ttl), nil
 		}
 	}
 }
@@ -150,15 +159,15 @@ func NewPeer(
 	mnemonics string,
 	subManager substrate.Manager,
 	handler Handler,
-	opts ...PeerOpt) (*Peer, error) {
-
+	opts ...PeerOpt,
+) (*Peer, error) {
 	cfg := &peerCfg{
 		relayURLs:        []string{"wss://relay.grid.tf"},
 		session:          "",
 		enableEncryption: true,
 		keyType:          KeyTypeSr25519,
 		cacheFactory: func(inner TwinDB, _ string) (TwinDB, error) {
-			return newInMemoryCache(inner), nil
+			return newInMemoryCache(inner, 0), nil
 		},
 	}
 
@@ -179,7 +188,7 @@ func NewPeer(
 		return nil, err
 	}
 
-	api, _, err := subManager.Raw()
+	api, _, err := subConn.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +216,6 @@ func NewPeer(
 		privKey, err = generateSecureKey(identity)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not generate secure key")
-
 		}
 		publicKey = privKey.PubKey().SerializeCompressed()
 	}
@@ -229,12 +237,6 @@ func NewPeer(
 
 	if !bytes.Equal(twin.E2EKey, publicKey) || twin.Relay == nil || joinURLs != *twin.Relay {
 		log.Info().Str("Relay url/s", joinURLs).Msg("twin relay/public key didn't match, updating on chain ...")
-		subConn, err := subManager.Substrate()
-		if err != nil {
-			return nil, errors.Wrap(err, "could not start substrate connection")
-		}
-		defer subConn.Close()
-
 		if _, err = subConn.UpdateTwin(identity, joinURLs, publicKey); err != nil {
 			return nil, errors.Wrap(err, "could not update twin relay information")
 		}
@@ -487,7 +489,6 @@ func (d *Peer) makeEnvelope(id string, dest uint32, session *string, cmd *string
 	}
 
 	return &env, nil
-
 }
 
 func (d *Peer) send(ctx context.Context, request *types.Envelope) error {
