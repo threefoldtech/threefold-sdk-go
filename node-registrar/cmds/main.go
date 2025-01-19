@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 
@@ -38,7 +37,7 @@ func Run() {
 
 	flag.BoolVar(&f.version, "v", false, "shows the package version")
 	flag.BoolVar(&f.debug, "debug", false, "allow debug logs")
-	flag.IntVar(&f.port, "server-port", 443, "server port")
+	flag.IntVar(&f.port, "server-port", 8080, "server port")
 	flag.StringVar(&f.domain, "domain", "", "domain on which the server will be served")
 
 	flag.Parse()
@@ -48,8 +47,13 @@ func Run() {
 		log.Info().Str("version", version).Str("commit", commit).Send()
 		return
 	}
+
 	if f.domain == "" {
-		log.Fatal().Err(errors.New("domain is required"))
+		log.Fatal().Msg("domain is required")
+	}
+
+	if f.SqlLogLevel < 0 || f.SqlLogLevel > 4 {
+		log.Fatal().Msg("sql log level out of bound")
 	}
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -59,16 +63,16 @@ func Run() {
 
 	db, err := db.NewDB(f.Config)
 	if err != nil {
-		log.Fatal().Msg("failed to open database with the specified configurations")
+		log.Fatal().Err(err).Msg("failed to open database with the specified configurations")
 	}
 
 	s, err := server.NewServer(db)
 	if err != nil {
-		log.Fatal().Msg("failed to start gin server")
+		log.Fatal().Err(err).Msg("failed to start gin server")
 	}
 
 	err = s.Router.Run(fmt.Sprintf("%s:%d", f.domain, f.port))
 	if err != nil {
-		log.Fatal().Msg("failed to run gin server")
+		log.Fatal().Err(err).Msg("failed to run gin server")
 	}
 }
