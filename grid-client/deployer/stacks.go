@@ -105,6 +105,6 @@ var (
 		DevNetwork:  "https://af8a73b8282edc62c5b8bfa22da50acb@dev.sentry.grid.tf/4",
 		TestNetwork: "https://af8a73b8282edc62c5b8bfa22da50acb@dev.sentry.grid.tf/4",
 		QaNetwork:   "https://af8a73b8282edc62c5b8bfa22da50acb@dev.sentry.grid.tf/4",
-		MainNetwork: "",
+		MainNetwork: "https://b16d2b5fcfbc87234bc180a4c574b45f@sentry.grid.tf/3",
 	}
 )

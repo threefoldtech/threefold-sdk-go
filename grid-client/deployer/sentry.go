@@ -7,10 +7,6 @@ import (
 )
 
 type gridSentry struct {
-	*sentryInfo
-}
-
-type sentryInfo struct {
 	twinID uint32
 }
 
@@ -19,7 +15,7 @@ func initSentry(twinID uint32, network string) (gridSentry, error) {
 	defer sentry.Flush(5 * time.Second)
 
 	return gridSentry{
-			sentryInfo: &sentryInfo{twinID: twinID},
+			twinID: twinID,
 		}, sentry.Init(sentry.ClientOptions{
 			Dsn:         SentryDSN[network],
 			Environment: network,
