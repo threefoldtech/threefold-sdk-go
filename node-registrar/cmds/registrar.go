@@ -1,4 +1,4 @@
-package cmds
+package main
 
 import (
 	"flag"
@@ -27,7 +27,13 @@ var (
 	version string
 )
 
-func Run() {
+func main() {
+	if err := Run(); err != nil {
+		log.Fatal().Err(err).Send()
+	}
+}
+
+func Run() error {
 	f := flags{}
 	var sqlLogLevel int
 	flag.StringVar(&f.PostgresHost, "postgres-host", "", "postgres host")
@@ -49,11 +55,11 @@ func Run() {
 
 	if f.version {
 		log.Info().Str("version", version).Str("commit", commit).Send()
-		return
+		return nil
 	}
 
 	if err := f.validate(); err != nil {
-		log.Error().Err(err).Send()
+		return err
 	}
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -63,18 +69,19 @@ func Run() {
 
 	db, err := db.NewDB(f.Config)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to open database with the specified configurations")
+		return errors.Wrap(err, "failed to open database with the specified configurations")
 	}
 
 	s, err := server.NewServer(db)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to start gin server")
+		return errors.Wrap(err, "failed to start gin server")
 	}
 
 	err = s.Run(fmt.Sprintf("%s:%d", f.domain, f.serverPort))
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to run gin server")
+		return errors.Wrap(err, "failed to run gin server")
 	}
+	return nil
 }
 
 func (f flags) validate() error {
@@ -91,3 +98,6 @@ func (f flags) validate() error {
 
 	return f.Config.Validate()
 }
+
+// 
+// registar
