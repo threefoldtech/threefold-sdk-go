@@ -32,7 +32,7 @@ func (s Server) listFarmsHandler(c *gin.Context) {
 		return
 	}
 
-	farms, err := s.DB.ListFarms(filter, limit)
+	farms, err := s.db.ListFarms(filter, limit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -61,7 +61,7 @@ func (s Server) getFarmHandler(c *gin.Context) {
 		return
 	}
 
-	farm, err := s.DB.GetFarm(id)
+	farm, err := s.db.GetFarm(id)
 	if err != nil {
 		if errors.Is(err, db.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -97,7 +97,7 @@ func (s Server) createFarmHandler(c *gin.Context) {
 		return
 	}
 
-	err := s.DB.CreateFarm(farm)
+	err := s.db.CreateFarm(farm)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -129,7 +129,7 @@ func (s Server) updateFarmsHandler(c *gin.Context) {
 		return
 	}
 
-	err := s.DB.UpdateFarm(farm)
+	err := s.db.UpdateFarm(farm)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -166,7 +166,7 @@ func (s Server) listNodesHandler(c *gin.Context) {
 	}
 	fmt.Println(filter, limit)
 
-	nodes, err := s.DB.ListNodes(filter, limit)
+	nodes, err := s.db.ListNodes(filter, limit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -195,7 +195,7 @@ func (s Server) getNodeHandler(c *gin.Context) {
 		return
 	}
 
-	node, err := s.DB.GetNode(id)
+	node, err := s.db.GetNode(id)
 	if err != nil {
 		if errors.Is(err, db.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -238,7 +238,7 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 		return
 	}
 
-	err := s.DB.RegisterNode(node)
+	err := s.db.RegisterNode(node)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -277,7 +277,7 @@ func (s Server) uptimeHandler(c *gin.Context) {
 		return
 	}
 
-	err = s.DB.Uptime(id, report.Uptime)
+	err = s.db.Uptime(id, report.Uptime)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -315,7 +315,7 @@ func (s Server) storeConsumptionHandler(c *gin.Context) {
 		return
 	}
 
-	err = s.DB.Consumption(id, report.Consumption)
+	err = s.db.Consumption(id, report.Consumption)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

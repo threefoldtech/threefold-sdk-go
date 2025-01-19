@@ -6,8 +6,8 @@ import (
 )
 
 type Server struct {
-	Router *gin.Engine
-	DB     db.DataBase
+	router *gin.Engine
+	db     db.DataBase
 }
 
 func NewServer(db db.DataBase) (s Server, err error) {
@@ -17,4 +17,8 @@ func NewServer(db db.DataBase) (s Server, err error) {
 	s.SetupRoutes()
 
 	return
+}
+
+func (s Server) Run(addr string) error {
+	return s.router.Run(addr)
 }

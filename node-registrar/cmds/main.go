@@ -71,7 +71,7 @@ func Run() {
 		log.Fatal().Err(err).Msg("failed to start gin server")
 	}
 
-	err = s.Router.Run(fmt.Sprintf("%s:%d", f.domain, f.port))
+	err = s.Run(fmt.Sprintf("%s:%d", f.domain, f.port))
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run gin server")
 	}
