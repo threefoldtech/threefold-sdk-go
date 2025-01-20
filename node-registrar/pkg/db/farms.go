@@ -43,7 +43,14 @@ func (db *Database) CreateFarm(farm Farm) (err error) {
 	return db.gormDB.Create(&farm).Error
 }
 
-func (db *Database) UpdateFarm(farm Farm) (err error) {
+func (db *Database) UpdateFarm(farmID uint64, farm Farm) (err error) {
+	if result := db.gormDB.First(&farm, farmID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return ErrRecordNotFound
+		}
+		return result.Error
+	}
+
 	result := db.gormDB.Save(&farm)
 	return result.Error
 }

@@ -63,13 +63,13 @@ func (s Server) getFarmHandler(c *gin.Context) {
 
 	farm, err := s.db.GetFarm(id)
 	if err != nil {
+		status := http.StatusBadRequest
+
 		if errors.Is(err, db.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
+			status = http.StatusNotFound
 		}
 
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		c.JSON(status, gin.H{"error": err.Error()})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -120,18 +120,37 @@ func (s Server) createFarmHandler(c *gin.Context) {
 // @Param farm_free_ips body uint64 false "farm free ips"
 // @Success 200 {object} db.Farm
 // @Failure 400 {object} error
+// @Failure 404 {object} db.ErrRecordNotFound
 // @Router /farms/ [patch]
 func (s Server) updateFarmsHandler(c *gin.Context) {
 	var farm db.Farm
+	farmID := c.Param("farm_id")
+
+	id, err := strconv.ParseUint(farmID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid farm_id: %v", err.Error())})
+		return
+	}
 
 	if err := c.ShouldBindJSON(&farm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("failed to parse farm info: %v", err.Error())})
 		return
 	}
 
-	err := s.db.UpdateFarm(farm)
+	if farm.FarmID != id {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "farm id does not match farm id in the request"})
+		return
+	}
+
+	err = s.db.UpdateFarm(id, farm)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		status := http.StatusBadRequest
+
+		if errors.Is(err, db.ErrRecordNotFound) {
+			status = http.StatusNotFound
+		}
+
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
