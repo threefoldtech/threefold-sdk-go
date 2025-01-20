@@ -7,10 +7,10 @@ import (
 
 type Server struct {
 	router *gin.Engine
-	db     db.DataBase
+	db     db.Database
 }
 
-func NewServer(db db.DataBase) (s Server, err error) {
+func NewServer(db db.Database) (s Server, err error) {
 	router := gin.Default()
 
 	s = Server{router, db}

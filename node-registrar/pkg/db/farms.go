@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (db *DataBase) ListFarms(filter FarmFilter, limit Limit) (farms []Farm, err error) {
+func (db *Database) ListFarms(filter FarmFilter, limit Limit) (farms []Farm, err error) {
 	query := db.gormDB.Model(&Farm{})
 
 	if filter.FarmName != nil {
@@ -28,7 +28,7 @@ func (db *DataBase) ListFarms(filter FarmFilter, limit Limit) (farms []Farm, err
 	return farms, nil
 }
 
-func (db *DataBase) GetFarm(farmID uint64) (farm Farm, err error) {
+func (db *Database) GetFarm(farmID uint64) (farm Farm, err error) {
 	if result := db.gormDB.First(&farm, farmID); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return farm, ErrRecordNotFound
@@ -39,11 +39,11 @@ func (db *DataBase) GetFarm(farmID uint64) (farm Farm, err error) {
 	return
 }
 
-func (db *DataBase) CreateFarm(farm Farm) (err error) {
+func (db *Database) CreateFarm(farm Farm) (err error) {
 	return db.gormDB.Create(&farm).Error
 }
 
-func (db *DataBase) UpdateFarm(farm Farm) (err error) {
+func (db *Database) UpdateFarm(farm Farm) (err error) {
 	result := db.gormDB.Save(&farm)
 	return result.Error
 }

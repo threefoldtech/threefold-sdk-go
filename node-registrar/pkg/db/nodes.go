@@ -7,7 +7,7 @@ import (
 )
 
 // ListNodes retrieves all nodes from the database with applied filters and pagination
-func (db *DataBase) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err error) {
+func (db *Database) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err error) {
 	query := db.gormDB.Model(&Node{})
 
 	if filter.NodeID != nil {
@@ -37,7 +37,7 @@ func (db *DataBase) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err
 }
 
 // GetNode retrieves a specific node by its nodeID
-func (db *DataBase) GetNode(nodeID uint64) (node Node, err error) {
+func (db *Database) GetNode(nodeID uint64) (node Node, err error) {
 	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return node, ErrRecordNotFound
@@ -48,7 +48,7 @@ func (db *DataBase) GetNode(nodeID uint64) (node Node, err error) {
 }
 
 // RegisterNode registers a new node in the database
-func (db *DataBase) RegisterNode(node Node) (err error) {
+func (db *Database) RegisterNode(node Node) (err error) {
 	if result := db.gormDB.Create(&node); result.Error != nil {
 		return result.Error
 	}
@@ -56,7 +56,7 @@ func (db *DataBase) RegisterNode(node Node) (err error) {
 }
 
 // Uptime updates the uptime for a specific node
-func (db *DataBase) Uptime(nodeID uint64, report Uptime) (err error) {
+func (db *Database) Uptime(nodeID uint64, report Uptime) (err error) {
 	var node Node
 	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
 		return result.Error
@@ -70,7 +70,7 @@ func (db *DataBase) Uptime(nodeID uint64, report Uptime) (err error) {
 }
 
 // Consumption updates the consumption report for a specific node
-func (db *DataBase) Consumption(nodeID uint64, report Consumption) (err error) {
+func (db *Database) Consumption(nodeID uint64, report Consumption) (err error) {
 	var node Node
 	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
 		return result.Error

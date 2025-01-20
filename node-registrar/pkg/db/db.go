@@ -26,14 +26,36 @@ type Config struct {
 const MaxIdleConns = 3
 
 // PostgresDatabase postgres db client
-type DataBase struct {
+type Database struct {
 	gormDB     *gorm.DB
 	connString string
 }
 
 var ErrRecordNotFound = errors.New("could not find any records")
 
-func NewDB(c Config) (db DataBase, err error) {
+func NewDB(c Config) (Database, error) {
+	db, err := openDatabase(c)
+	if err != nil {
+		return Database{}, err
+	}
+
+	sql, err := db.gormDB.DB()
+	if err != nil {
+		return Database{}, errors.Wrap(err, "failed to configure DB connection")
+	}
+
+	sql.SetMaxIdleConns(MaxIdleConns)
+	sql.SetMaxOpenConns(int(c.MaxOpenConns))
+
+	err = db.autoMigrate()
+	if err != nil {
+		return Database{}, err
+	}
+
+	return db, sql.Ping()
+}
+
+func openDatabase(c Config) (db Database, err error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.DBName, c.SSLMode)
 
@@ -44,23 +66,17 @@ func NewDB(c Config) (db DataBase, err error) {
 		return db, errors.Wrapf(err, "Failed to connect to the database: %v", err)
 	}
 
-	sql, err := gormDB.DB()
-	if err != nil {
-		return db, errors.Wrap(err, "failed to configure DB connection")
-	}
+	return Database{gormDB, dsn}, nil
+}
 
-	sql.SetMaxIdleConns(MaxIdleConns)
-	sql.SetMaxOpenConns(int(c.MaxOpenConns))
-
-	db = DataBase{gormDB, dsn}
-
+func (db Database) autoMigrate() error {
 	if err := db.gormDB.AutoMigrate(
 		&Farm{},
 		&Node{},
 	); err != nil {
-		return db, errors.Wrap(err, "failed to migrate tables")
+		return errors.Wrap(err, "failed to migrate tables")
 	}
-	return
+	return nil
 }
 
 func (c Config) Validate() error {
