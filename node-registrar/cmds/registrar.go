@@ -20,6 +20,7 @@ type flags struct {
 	version    bool
 	domain     string
 	serverPort uint
+	network    string
 }
 
 var (
@@ -49,6 +50,7 @@ func Run() error {
 	flag.BoolVar(&f.debug, "debug", false, "allow debug logs")
 	flag.UintVar(&f.serverPort, "server-port", 8080, "server port")
 	flag.StringVar(&f.domain, "domain", "", "domain on which the server will be served")
+	flag.StringVar(&f.network, "network", "dev", "the registrar network")
 
 	flag.Parse()
 	f.SqlLogLevel = logger.LogLevel(sqlLogLevel)
@@ -72,7 +74,7 @@ func Run() error {
 		return errors.Wrap(err, "failed to open database with the specified configurations")
 	}
 
-	s, err := server.NewServer(db)
+	s, err := server.NewServer(db, f.network)
 	if err != nil {
 		return errors.Wrap(err, "failed to start gin server")
 	}

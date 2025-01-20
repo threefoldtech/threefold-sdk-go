@@ -59,6 +59,9 @@ func (db *Database) RegisterNode(node Node) (err error) {
 func (db *Database) Uptime(nodeID uint64, report Uptime) (err error) {
 	var node Node
 	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return ErrRecordNotFound
+		}
 		return result.Error
 	}
 
@@ -73,6 +76,9 @@ func (db *Database) Uptime(nodeID uint64, report Uptime) (err error) {
 func (db *Database) Consumption(nodeID uint64, report Consumption) (err error) {
 	var node Node
 	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return ErrRecordNotFound
+		}
 		return result.Error
 	}
 

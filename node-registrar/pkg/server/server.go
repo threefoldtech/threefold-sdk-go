@@ -6,14 +6,15 @@ import (
 )
 
 type Server struct {
-	router *gin.Engine
-	db     db.Database
+	router  *gin.Engine
+	db      db.Database
+	network string
 }
 
-func NewServer(db db.Database) (s Server, err error) {
+func NewServer(db db.Database, network string) (s Server, err error) {
 	router := gin.Default()
 
-	s = Server{router, db}
+	s = Server{router, db, network}
 	s.SetupRoutes()
 
 	return

@@ -103,7 +103,7 @@ func (s Server) createFarmHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "Farm created successfully",
 		"farm":    farm,
 	})
@@ -263,7 +263,7 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "node registered successfully",
 		"node":    node,
 	})
@@ -277,6 +277,7 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 // @Param uptime body db.Uptime false "uptime report"
 // @Success 200 {object} string
 // @Failure 400 {object} error
+// @Failure 404 {object} db.ErrRecordNotFound
 // @Router /nodes/{node_id}/uptime [post]
 func (s Server) uptimeHandler(c *gin.Context) {
 	nodeID := c.Param("node_id")
@@ -298,7 +299,13 @@ func (s Server) uptimeHandler(c *gin.Context) {
 
 	err = s.db.Uptime(id, report.Uptime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		status := http.StatusBadRequest
+
+		if errors.Is(err, db.ErrRecordNotFound) {
+			status = http.StatusNotFound
+		}
+
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -315,6 +322,7 @@ func (s Server) uptimeHandler(c *gin.Context) {
 // @Param consumption body db.Consumption false "consumption report"
 // @Success 200 {object} string
 // @Failure 400 {object} error
+// @Failure 404 {object} db.ErrRecordNotFound
 // @Router /nodes/{node_id}/uptime [post]
 func (s Server) storeConsumptionHandler(c *gin.Context) {
 	nodeID := c.Param("node_id")
@@ -336,7 +344,13 @@ func (s Server) storeConsumptionHandler(c *gin.Context) {
 
 	err = s.db.Consumption(id, report.Consumption)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		status := http.StatusBadRequest
+
+		if errors.Is(err, db.ErrRecordNotFound) {
+			status = http.StatusNotFound
+		}
+
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
