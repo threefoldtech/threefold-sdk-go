@@ -137,7 +137,7 @@ func (s Server) updateFarmsHandler(c *gin.Context) {
 		return
 	}
 
-	if farm.FarmID != id {
+	if farm.FarmID != 0 && farm.FarmID != id {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "farm id does not match farm id in the request"})
 		return
 	}
@@ -156,7 +156,6 @@ func (s Server) updateFarmsHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Farm was updated successfully",
-		"farm":    farm,
 	})
 }
 
