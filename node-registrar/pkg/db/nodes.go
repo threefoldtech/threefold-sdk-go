@@ -75,11 +75,12 @@ func (db *Database) Uptime(nodeID uint64, report Uptime) (err error) {
 // Consumption updates the consumption report for a specific node
 func (db *Database) Consumption(nodeID uint64, report Consumption) (err error) {
 	var node Node
-	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+
+	if err := db.gormDB.First(&node, nodeID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrRecordNotFound
 		}
-		return result.Error
+		return err
 	}
 
 	node.Consumption = report

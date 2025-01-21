@@ -346,16 +346,14 @@ func (s Server) storeConsumptionHandler(c *gin.Context) {
 		return
 	}
 
-	var report struct {
-		Consumption db.Consumption `json:"consumption"`
-	}
+	var consumption db.Consumption
 
-	if err := c.ShouldBindJSON(&report); err != nil {
+	if err := c.ShouldBindJSON(&consumption); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = s.db.Consumption(id, report.Consumption)
+	err = s.db.Consumption(id, consumption)
 	if err != nil {
 		status := http.StatusBadRequest
 

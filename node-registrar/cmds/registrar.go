@@ -41,13 +41,14 @@ func Run() error {
 	f := flags{}
 	var sqlLogLevel int
 	flag.StringVar(&f.PostgresHost, "postgres-host", "", "postgres host")
-	flag.UintVar(&f.Config.PostgresPort, "postgres-port", 5432, "postgres port")
+	flag.Uint64Var(&f.Config.PostgresPort, "postgres-port", 5432, "postgres port")
 	flag.StringVar(&f.DBName, "postgres-db", "", "postgres database")
 	flag.StringVar(&f.PostgresUser, "postgres-user", "", "postgres username")
 	flag.StringVar(&f.PostgresPassword, "postgres-password", "", "postgres password")
 	flag.StringVar(&f.SSLMode, "ssl-mode", "disable", "postgres ssl mode[disable, require, verify-ca, verify-full]")
 	flag.IntVar(&sqlLogLevel, "sql-log-level", 2, "sql logger level")
-	flag.UintVar(&f.MaxOpenConns, "max-conn", 3, "max sql connections")
+	flag.Uint64Var(&f.MaxOpenConns, "max-open-conn", 3, "max open sql connections")
+	flag.Uint64Var(&f.MaxIdleConns, "max-idle-conn", 3, "max idle sql connections")
 
 	flag.BoolVar(&f.version, "v", false, "shows the package version")
 	flag.BoolVar(&f.debug, "debug", false, "allow debug logs")

@@ -14,16 +14,15 @@ import (
 
 type Config struct {
 	PostgresHost     string
-	PostgresPort     uint
+	PostgresPort     uint64
 	DBName           string
 	PostgresUser     string
 	PostgresPassword string
 	SSLMode          string
 	SqlLogLevel      logger.LogLevel
-	MaxOpenConns     uint
+	MaxOpenConns     uint64
+	MaxIdleConns     uint64
 }
-
-const MaxIdleConns = 3
 
 // PostgresDatabase postgres db client
 type Database struct {
@@ -47,7 +46,7 @@ func NewDB(c Config) (Database, error) {
 		return Database{}, errors.Wrap(err, "failed to configure DB connection")
 	}
 
-	sql.SetMaxIdleConns(MaxIdleConns)
+	sql.SetMaxIdleConns(int(c.MaxIdleConns))
 	sql.SetMaxOpenConns(int(c.MaxOpenConns))
 
 	err = db.autoMigrate()
