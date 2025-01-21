@@ -11,7 +11,7 @@ import (
 
 type Farm struct {
 	FarmID      uint64 `gorm:"primaryKey;autoIncrement" json:"farm_id"`
-	FarmName    string `gorm:"size:100;not null;unique" json:"farm_name"`
+	FarmName    string `gorm:"size:40;not null;unique;check:farm_name <> ''" json:"farm_name"`
 	TwinID      uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"`
 	Dedicated   bool   `json:"dedicated"`
 	FarmFreeIps uint64 `json:"farm_free_ips"`
@@ -27,8 +27,8 @@ type Node struct {
 	FarmID uint64 `json:"farm_id" gorm:"not null;check:farm_id> 0"`
 	TwinID uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"`
 
-	Version string `json:"version" gorm:"not null"`
-	Type    string `json:"type" gorm:"not null"`
+	ZosVersion string `json:"zos_version" gorm:"not null"`
+	NodeType   string `json:"node_type" gorm:"not null"`
 
 	Location Location `json:"location" gorm:"not null;type:json"`
 
@@ -50,9 +50,9 @@ type Consumption []substrate.NruConsumption
 type Uptime int64
 
 type PublicConfig struct {
-	PublicIPV4 string
-	PublicIPV6 string
-	Domain     string
+	PublicIPV4 string `json:"public_ip_v4"`
+	PublicIPV6 string `json:"public_ip_v6"`
+	Domain     string `json:"domain"`
 }
 
 // Value implements the Valuer interface for storing PublicConfig in the database
@@ -78,10 +78,10 @@ func (c *PublicConfig) Scan(value any) error {
 }
 
 type Resources struct {
-	HRU uint64
-	SRU uint64
-	CRU uint64
-	MRU uint64
+	HRU uint64 `json:"hru"`
+	SRU uint64 `json:"sru"`
+	CRU uint64 `json:"cru"`
+	MRU uint64 `json:"mru"`
 }
 
 // Value implements the Valuer interface for storing Resources in the database
