@@ -22,9 +22,6 @@ func (db *Database) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err
 	if filter.Status != "" {
 		query = query.Where("status = ?", filter.Status)
 	}
-	if filter.Healthy {
-		query = query.Where("healthy = ?", filter.Healthy)
-	}
 
 	offset := (limit.Page - 1) * limit.Size
 	query = query.Offset(int(offset)).Limit(int(limit.Size))
@@ -50,6 +47,9 @@ func (db *Database) GetNode(nodeID uint64) (node Node, err error) {
 // RegisterNode registers a new node in the database
 func (db *Database) RegisterNode(node Node) (err error) {
 	if result := db.gormDB.Create(&node); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			return ErrRecordAlreadyExists
+		}
 		return result.Error
 	}
 	return nil

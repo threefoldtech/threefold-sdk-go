@@ -88,6 +88,7 @@ func (s Server) getFarmHandler(c *gin.Context) {
 // @Param farm_free_ips body uint64 false "farm free ips"
 // @Success 200 {object} db.Farm
 // @Failure 400 {object} error
+// @Failure 409 {object} db.ErrRecordAlreadyExists
 // @Router /farms/ [post]
 func (s Server) createFarmHandler(c *gin.Context) {
 	var farm db.Farm
@@ -99,7 +100,13 @@ func (s Server) createFarmHandler(c *gin.Context) {
 
 	err := s.db.CreateFarm(farm)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		status := http.StatusBadRequest
+
+		if errors.Is(err, db.ErrRecordAlreadyExists) {
+			status = http.StatusConflict
+		}
+
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -247,6 +254,7 @@ func (s Server) getNodeHandler(c *gin.Context) {
 // @Param consumption body db.Consumption false "consumption report"
 // @Success 200 {object} db.Node
 // @Failure 400 {object} error
+// @Failure 409 {object} db.ErrRecordAlreadyExists
 // @Router /nodes/ [post]
 func (s Server) registerNodeHandler(c *gin.Context) {
 	var node db.Node
@@ -258,7 +266,13 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 
 	err := s.db.RegisterNode(node)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		status := http.StatusBadRequest
+
+		if errors.Is(err, db.ErrRecordAlreadyExists) {
+			status = http.StatusConflict
+		}
+
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 

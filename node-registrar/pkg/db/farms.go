@@ -40,7 +40,13 @@ func (db *Database) GetFarm(farmID uint64) (farm Farm, err error) {
 }
 
 func (db *Database) CreateFarm(farm Farm) (err error) {
-	return db.gormDB.Create(&farm).Error
+	if err = db.gormDB.Create(&farm).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return ErrRecordAlreadyExists
+		}
+	}
+
+	return
 }
 
 func (db *Database) UpdateFarm(farmID uint64, val Farm) (err error) {

@@ -31,7 +31,10 @@ type Database struct {
 	connString string
 }
 
-var ErrRecordNotFound = errors.New("could not find any records")
+var (
+	ErrRecordNotFound      = errors.New("could not find any records")
+	ErrRecordAlreadyExists = errors.New("record already exists")
+)
 
 func NewDB(c Config) (Database, error) {
 	db, err := openDatabase(c)
