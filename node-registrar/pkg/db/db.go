@@ -121,3 +121,14 @@ func (c Config) Validate() error {
 
 	return nil
 }
+
+func (db Database) Close() error {
+	sql, err := db.gormDB.DB()
+	if err != nil {
+		return err
+	}
+	if err := sql.Close(); err != nil {
+		return err
+	}
+	return nil
+}

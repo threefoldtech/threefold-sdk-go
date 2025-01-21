@@ -4,7 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -64,6 +67,7 @@ func Run() error {
 		return err
 	}
 
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if f.debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -74,15 +78,27 @@ func Run() error {
 		return errors.Wrap(err, "failed to open database with the specified configurations")
 	}
 
+	defer func() {
+		err = db.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to close database connection")
+		}
+	}()
+
 	s, err := server.NewServer(db, f.network)
 	if err != nil {
 		return errors.Wrap(err, "failed to start gin server")
 	}
 
-	err = s.Run(fmt.Sprintf("%s:%d", f.domain, f.serverPort))
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	log.Info().Msg("server is running on port :8080")
+	err = s.Run(quit, fmt.Sprintf("%s:%d", f.domain, f.serverPort))
 	if err != nil {
 		return errors.Wrap(err, "failed to run gin server")
 	}
+
 	return nil
 }
 

@@ -1,7 +1,13 @@
 package server
 
 import (
+	"context"
+	"net/http"
+	"os"
+	"sync"
+
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/db"
 )
 
@@ -20,6 +26,28 @@ func NewServer(db db.Database, network string) (s Server, err error) {
 	return
 }
 
-func (s Server) Run(addr string) error {
-	return s.router.Run(addr)
+func (s Server) Run(quit chan os.Signal, addr string) error {
+	server := &http.Server{
+		Addr:    addr,
+		Handler: s.router,
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		<-quit
+
+		log.Info().Msg("server is shutting down")
+		err := server.Shutdown(context.Background())
+		if err != nil {
+			log.Error().Err(err).Msg("failed to shut down server gracefully")
+		}
+	}()
+
+	err := server.ListenAndServe()
+	wg.Wait()
+
+	return err
 }
