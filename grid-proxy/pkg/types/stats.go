@@ -43,10 +43,11 @@ type NodeStatisticsUsers struct {
 
 // NodeStatistics node statistics info
 type NodeStatistics struct {
-	System NodeStatisticsResources `json:"system"`
-	Total  NodeStatisticsResources `json:"total"`
-	Used   NodeStatisticsResources `json:"used"`
-	Users  NodeStatisticsUsers     `json:"users"`
+	System         NodeStatisticsResources `json:"system"`
+	Total          NodeStatisticsResources `json:"total"`
+	Used           NodeStatisticsResources `json:"used"`
+	Users          NodeStatisticsUsers     `json:"users"`
+	OpenConnecions uint                    `json:"open_connections"`
 }
 
 // NodeStatus is used for status endpoint to decode json in
