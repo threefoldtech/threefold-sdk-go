@@ -10,7 +10,7 @@ COPY . .
 
 RUN go build -o server ./cmds/registrar.go
 
-FROM alpine:latest
+FROM alpine:3.21
 
 WORKDIR /root/
 
