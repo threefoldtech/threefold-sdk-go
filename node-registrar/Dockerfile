@@ -2,11 +2,11 @@ FROM golang:1.21-alpine as builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY /node-registrar/go.mod /node-registrar/go.sum .
 
 RUN go mod download
 
-COPY . .
+COPY /node-registrar .
 
 RUN go build -o server ./cmds/registrar.go
 
