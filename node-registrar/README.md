@@ -45,3 +45,30 @@ Replace `<domain>` and `<port>` with the appropriate values.
 ### How to Use the Server
 1. Use a tool like Postman or cURL to interact with the API.
 2. Refer to the Swagger documentation for detailed information about request parameters and response structures.
+
+### How to run the server with docker
+1. use the docker file to build the docker image 
+```
+docker build -t registrar:latest .
+```
+2. run the image
+```
+docker run -d \
+  -p 8080:8080 \
+  --name registrar \
+  registrar:latest \
+  ./server
+  --postgres-host=<your-postgres-host> \
+  --postgres-port=5432 \
+  --postgres-db=<your-db-name> \
+  --postgres-user=<your-db-user> \
+  --postgres-password=<your-db-password> \
+  --ssl-mode=disable \
+  --sql-log-level=2 \
+  --max-open-conn=10 \
+  --max-idle-conn=5 \
+  --server-port=8080 \
+  --<domain=your-domain> \
+  --network=main\
+  --debug
+```
