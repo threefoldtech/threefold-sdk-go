@@ -1,0 +1,579 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/farm/{farm_id}": {
+            "get": {
+                "description": "get a farm with specific id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get farm",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "farm id",
+                        "name": "farm_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Farm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/farms/": {
+            "get": {
+                "description": "list farms with specific filter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "list farms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "farm name",
+                        "name": "farm_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "farm id",
+                        "name": "farm_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "twin id",
+                        "name": "twin_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max result per page",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Farm"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            },
+            "post": {
+                "description": "creates a farm",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "create a farm",
+                "parameters": [
+                    {
+                        "description": "farm id",
+                        "name": "farm_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "farm name",
+                        "name": "farm_name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "twin id",
+                        "name": "twin_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "dedicated farm",
+                        "name": "dedicated",
+                        "in": "body",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "farm free ips",
+                        "name": "farm_free_ips",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Farm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            },
+            "patch": {
+                "description": "update a farm",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "update a farm",
+                "parameters": [
+                    {
+                        "description": "farm id",
+                        "name": "farm_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "farm name",
+                        "name": "farm_name",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "twin id",
+                        "name": "twin_id",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "dedicated farm",
+                        "name": "dedicated",
+                        "in": "body",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "farm free ips",
+                        "name": "farm_free_ips",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Farm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/nodes/": {
+            "get": {
+                "description": "list nodes with specific filter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "list nodes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "node id",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "farm id",
+                        "name": "farm_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "twin id",
+                        "name": "twin_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "node status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "is node healthy",
+                        "name": "healthy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max result per page",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Node"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            },
+            "post": {
+                "description": "register a node",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "register a node",
+                "parameters": [
+                    {
+                        "description": "node id",
+                        "name": "node_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "farm id",
+                        "name": "farm_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "twin id",
+                        "name": "twin_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "node features ",
+                        "name": "features",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "description": "node status",
+                        "name": "status",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "node healthy",
+                        "name": "healthy",
+                        "in": "body",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "node dedicated",
+                        "name": "dedicated",
+                        "in": "body",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "node rented",
+                        "name": "rented",
+                        "in": "body",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "node rentable",
+                        "name": "rentable",
+                        "in": "body",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "description": "price in usd",
+                        "name": "price_usd",
+                        "in": "body",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "uptime report",
+                        "name": "uptime",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "consumption report",
+                        "name": "consumption",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Node"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/nodes/{node_id}": {
+            "get": {
+                "description": "get a node with specific id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get node",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "node id",
+                        "name": "node_id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Node"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/nodes/{node_id}/uptime": {
+            "post": {
+                "description": "save consumption report of a node",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "consumption report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "node id",
+                        "name": "node_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "consumption report",
+                        "name": "consumption",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "db.Farm": {
+            "type": "object",
+            "properties": {
+                "dedicated": {
+                    "type": "boolean"
+                },
+                "farm_free_ips": {
+                    "type": "integer"
+                },
+                "farm_id": {
+                    "description": "Primary key",
+                    "type": "integer"
+                },
+                "farm_name": {
+                    "type": "string"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Node"
+                    }
+                },
+                "twin_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "db.Node": {
+            "type": "object",
+            "properties": {
+                "consumption": {
+                    "type": "string"
+                },
+                "dedicated": {
+                    "type": "boolean"
+                },
+                "extra_fee": {
+                    "type": "integer"
+                },
+                "farm_id": {
+                    "type": "integer"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "healthy": {
+                    "type": "boolean"
+                },
+                "node_id": {
+                    "type": "integer"
+                },
+                "price_usd": {
+                    "type": "number"
+                },
+                "rentable": {
+                    "type": "boolean"
+                },
+                "rented": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "twin_id": {
+                    "type": "integer"
+                },
+                "uptime": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
