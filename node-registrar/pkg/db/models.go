@@ -9,6 +9,11 @@ import (
 	substrate "github.com/threefoldtech/tfchain/clients/tfchain-client-go"
 )
 
+type Twin struct {
+	TwinID uint64
+	// pubkey
+}
+
 type Farm struct {
 	FarmID      uint64 `gorm:"primaryKey;autoIncrement" json:"farm_id"`
 	FarmName    string `gorm:"size:40;not null;unique;check:farm_name <> ''" json:"farm_name"`
@@ -32,8 +37,12 @@ type Node struct {
 
 	Location Location `json:"location" gorm:"not null;type:json"`
 
-	PublicConfig PublicConfig `json:"public_config" gorm:"type:json"`
-	Resources    Resources    `json:"resources" gorm:"not null;type:json"`
+	// PublicConfig PublicConfig `json:"public_config" gorm:"type:json"`
+	Resources    Resources `json:"resources" gorm:"not null;type:json"`
+	Interface    Interface `json:"interface" gorm:"not null;type:json"`
+	SecureBoot   bool
+	Virtualized  bool
+	SerialNumber string
 
 	Uptime      Uptime      `json:"uptime"`
 	Consumption Consumption `json:"consumption" gorm:"type:jsonb;serializer:json"`
@@ -49,30 +58,30 @@ type Consumption []substrate.NruConsumption
 
 type Uptime int64
 
-type PublicConfig struct {
-	PublicIPV4 string `json:"public_ip_v4"`
-	PublicIPV6 string `json:"public_ip_v6"`
-	Domain     string `json:"domain"`
+type Interface struct {
+	Name string `json:"name"`
+	Mac  string `json:"mac"`
+	IPs  string `json:"ips"`
 }
 
-// Value implements the Valuer interface for storing PublicConfig in the database
-func (c PublicConfig) Value() (driver.Value, error) {
-	bytes, err := json.Marshal(c)
+// Value implements the Valuer interface for storing Interface in the database
+func (i Interface) Value() (driver.Value, error) {
+	bytes, err := json.Marshal(i)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal PublicConfig: %w", err)
+		return nil, fmt.Errorf("failed to marshal Interface: %w", err)
 	}
 	return string(bytes), nil
 }
 
-// Scan implements the Scanner interface for retrieving PublicConfig from the database
-func (c *PublicConfig) Scan(value any) error {
+// Scan implements the Scanner interface for retrieving Interface from the database
+func (i *Interface) Scan(value any) error {
 	bytes, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("invalid data type for PublicConfig: %T", value)
+		return fmt.Errorf("invalid data type for Interface: %T", value)
 	}
 
-	if err := json.Unmarshal(bytes, c); err != nil {
-		return fmt.Errorf("failed to unmarshal PublicConfig: %w", err)
+	if err := json.Unmarshal(bytes, i); err != nil {
+		return fmt.Errorf("failed to unmarshal Interface: %w", err)
 	}
 	return nil
 }
@@ -135,6 +144,35 @@ func (l *Location) Scan(value any) error {
 	return nil
 }
 
+//	type PublicConfig struct {
+//		PublicIPV4 string `json:"public_ip_v4"`
+//		PublicIPV6 string `json:"public_ip_v6"`
+//		Domain     string `json:"domain"`
+//	}
+//
+// // Value implements the Valuer interface for storing PublicConfig in the database
+//
+//	func (c PublicConfig) Value() (driver.Value, error) {
+//		bytes, err := json.Marshal(c)
+//		if err != nil {
+//			return nil, fmt.Errorf("failed to marshal PublicConfig: %w", err)
+//		}
+//		return string(bytes), nil
+//	}
+//
+// // Scan implements the Scanner interface for retrieving PublicConfig from the database
+//
+//	func (c *PublicConfig) Scan(value any) error {
+//		bytes, ok := value.([]byte)
+//		if !ok {
+//			return fmt.Errorf("invalid data type for PublicConfig: %T", value)
+//		}
+//
+//		if err := json.Unmarshal(bytes, c); err != nil {
+//			return fmt.Errorf("failed to unmarshal PublicConfig: %w", err)
+//		}
+//		return nil
+//	}
 type NodeFilter struct {
 	NodeID  *uint64 `form:"node_id"`
 	FarmID  *uint64 `form:"farm_id"`
