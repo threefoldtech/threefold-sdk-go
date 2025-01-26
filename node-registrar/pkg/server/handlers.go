@@ -407,8 +407,8 @@ func createChallenge(timestamp int64, publicKey string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-// @Summary create an account/twin
-// @Description create an account/twin
+// @Summary creates a new account/twin
+// @Description creates a new account after verifying key ownership
 // @Accept  json
 // @Produce  json
 // @Param public_key body string true "base64 encoded public key"
@@ -418,7 +418,6 @@ func createChallenge(timestamp int64, publicKey string) string {
 // @Failure 400 {object} error
 // @Failure 409 {object} db.ErrRecordAlreadyExists
 // @Router /accounts/ [post]
-// createAccountHandler creates a new account after verifying key ownership
 func (s *Server) createAccountHandler(c *gin.Context) {
 	var req AccountCreationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -478,6 +477,16 @@ func (s *Server) createAccountHandler(c *gin.Context) {
 }
 
 // getAccountHandler retrieves an account by twin ID
+// @Summary Retrieve an account by twin ID
+// @Description This endpoint retrieves an account by its twin ID.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param twin_id path uint64 true "Twin ID of the account"
+// @Success 200 {object} db.Account "Account details"
+// @Failure 400 {object} gin.H "Invalid twin ID"
+// @Failure 404 {object} gin.H "Account not found"
+// @Router /accounts/{twin_id} [get]
 func (s *Server) getAccountHandler(c *gin.Context) {
 	twinID, err := strconv.ParseUint(c.Param("twin_id"), 10, 64)
 	if err != nil {
