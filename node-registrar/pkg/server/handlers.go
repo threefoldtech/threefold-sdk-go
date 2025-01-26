@@ -1,10 +1,15 @@
 package server
 
 import (
+	"crypto/ed25519"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/db"
@@ -377,4 +382,151 @@ func parseQueryParams(c *gin.Context, types_ ...interface{}) error {
 		}
 	}
 	return nil
+}
+
+// AccountRequest represents the request body for account operations
+type AccountCreationRequest struct {
+	PublicKey string `json:"public_key" binding:"required"`
+	Signature string `json:"signature" binding:"required"`
+	Timestamp int64  `json:"timestamp" binding:"required"`
+}
+
+const (
+	MaxTimestampDelta = 2 * time.Second
+)
+
+// Challenge is uniquely tied to both the timestamp and public key
+// Prevents replay attacks across different accounts, still no state management required
+// createChallenge creates a deterministic challenge from timestamp and public key
+func createChallenge(timestamp int64, publicKey string) string {
+	// Create a unique message combining action, timestamp, and public key
+	message := fmt.Sprintf("create_account:%d:%s", timestamp, publicKey)
+
+	// Hash the message
+	hash := sha256.Sum256([]byte(message))
+	return hex.EncodeToString(hash[:])
+}
+
+// @Summary create an account/twin
+// @Description create an account/twin
+// @Accept  json
+// @Produce  json
+// @Param public_key body string true "base64 encoded public key"
+// @Param signature body string true "base64 encoded signature"
+// @Param timestamp body uint64 true "timestamp"
+// @Success 201 {object} db.Account
+// @Failure 400 {object} error
+// @Failure 409 {object} db.ErrRecordAlreadyExists
+// @Router /accounts/ [post]
+// createAccountHandler creates a new account after verifying key ownership
+func (s *Server) createAccountHandler(c *gin.Context) {
+	var req AccountCreationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate public key format
+	if !isValidPublicKey(req.PublicKey) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid public key format"})
+		return
+	}
+
+	// Verify timestamp is within acceptable window
+	now := time.Now()
+	requestTime := time.Unix(req.Timestamp, 0)
+	delta := now.Sub(requestTime)
+
+	if delta < -MaxTimestampDelta || delta > MaxTimestampDelta {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":       "timestamp outside acceptable window",
+			"server_time": now.Unix(),
+		})
+		return
+	}
+
+	// Create challenge using timestamp and public key
+	challenge := createChallenge(req.Timestamp, req.PublicKey)
+
+	// Verify signature of the challenge
+	valid, err := verifySignature(req.PublicKey, challenge, req.Signature)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("signature verification error: %v", err)})
+		return
+	}
+
+	if !valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid signature"})
+		return
+	}
+
+	// Now we can create new account
+	account := &db.Account{
+		PublicKey: req.PublicKey,
+	}
+
+	if err := s.db.CreateAccount(account); err != nil {
+		if errors.Is(err, db.ErrRecordAlreadyExists) {
+			c.JSON(http.StatusConflict, gin.H{"error": "account with this public key already exists"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create account"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, account)
+}
+
+// getAccountHandler retrieves an account by twin ID
+func (s *Server) getAccountHandler(c *gin.Context) {
+	twinID, err := strconv.ParseUint(c.Param("twin_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid twin ID"})
+		return
+	}
+
+	account, err := s.db.GetAccount(twinID)
+	if err != nil {
+		if err == db.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get account"})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
+}
+
+// verifySignature verifies an ED25519 signature
+func verifySignature(publicKeyBase64, message, signatureBase64 string) (bool, error) {
+	// Decode public key from base64
+	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyBase64)
+	if err != nil {
+		return false, fmt.Errorf("invalid public key format: %w", err)
+	}
+
+	// Verify public key length
+	if len(publicKeyBytes) != ed25519.PublicKeySize {
+		return false, fmt.Errorf("invalid public key size: expected %d, got %d",
+			ed25519.PublicKeySize, len(publicKeyBytes))
+	}
+
+	// Decode signature from base64
+	signatureBytes, err := base64.StdEncoding.DecodeString(signatureBase64)
+	if err != nil {
+		return false, fmt.Errorf("invalid signature format: %w", err)
+	}
+
+	// Verify the signature
+	return ed25519.Verify(publicKeyBytes, []byte(message), signatureBytes), nil
+}
+
+// Helper function to validate public key format
+func isValidPublicKey(publicKeyBase64 string) bool {
+	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyBase64)
+	if err != nil {
+		return false
+	}
+	return len(publicKeyBytes) == ed25519.PublicKeySize
 }

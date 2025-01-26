@@ -9,9 +9,14 @@ import (
 	substrate "github.com/threefoldtech/tfchain/clients/tfchain-client-go"
 )
 
-type Twin struct {
-	TwinID uint64
-	// pubkey
+type Account struct {
+	TwinID    uint64 `gorm:"primaryKey;autoIncrement"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	PublicKey string `gorm:"type:text;not null;unique"` // ED25519 public key in the more standard base64 since we are moving from substarte echo system? (still SS58 can be used or plain base58 ,TBD)
+	// Relations
+	Farms []Farm `gorm:"foreignKey:TwinID;references:TwinID"`
+	Nodes []Node `gorm:"foreignKey:TwinID;references:TwinID"`
 }
 
 type Farm struct {
@@ -22,7 +27,6 @@ type Farm struct {
 	FarmFreeIps uint64 `json:"farm_free_ips"`
 
 	CreatedAt time.Time
-	UpdatedAt time.Time
 
 	Nodes []Node `gorm:"foreignKey:farm_id;constraint:OnDelete:CASCADE" json:"nodes"`
 }

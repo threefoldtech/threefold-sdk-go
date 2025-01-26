@@ -46,7 +46,7 @@ func (db *Database) GetNode(nodeID uint64) (node Node, err error) {
 
 // RegisterNode registers a new node in the database
 func (db *Database) RegisterNode(node Node) (err error) {
-	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
+	if result := db.gormDB.First(&node, node.NodeID); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return ErrRecordNotFound
 		}

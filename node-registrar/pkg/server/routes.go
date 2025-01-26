@@ -3,8 +3,8 @@ package server
 import (
 	_ "github.com/threefoldtech/tfgrid-sdk-go/node-registrar/docs"
 
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func (s *Server) SetupRoutes() {
@@ -29,4 +29,10 @@ func (s *Server) SetupRoutes() {
 	nodeRoutes.Use(s.createAuthNodeMiddleware(s.network))
 	nodeRoutes.POST("/:node_id/uptime", s.uptimeHandler)
 	nodeRoutes.POST("/:node_id/consumption", s.storeConsumptionHandler)
+
+	// Account routes
+	accountRoutes := v1.Group("accounts")
+	accountRoutes.POST("/", s.createAccountHandler)
+	accountRoutes.GET("/:twin_id", s.getAccountHandler)
+
 }
