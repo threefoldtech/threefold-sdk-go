@@ -35,7 +35,7 @@ func (d *NetworkDeployer) Validate(ctx context.Context, networks []workloads.Net
 	var multiErr error
 
 	if err := validateAccountBalanceForExtrinsics(sub, d.tfPluginClient.Identity); err != nil {
-		return nil, err
+		return nil, d.tfPluginClient.sentry.error(err)
 	}
 
 	filteredZNets := make([]workloads.Network, 0)
@@ -54,11 +54,11 @@ func (d *NetworkDeployer) Validate(ctx context.Context, networks []workloads.Net
 		filteredZNets = append(filteredZNets, znet)
 	}
 
-	return filteredZNets, multiErr
+	return filteredZNets, d.tfPluginClient.sentry.error(multiErr)
 }
 
-// GenerateVersionlessDeployments generates deployments for network deployer without versions.
-func (d *NetworkDeployer) GenerateVersionlessDeployments(ctx context.Context, zNets []workloads.Network) (map[uint32][]zos.Deployment, error) {
+// generateVersionlessDeployments generates deployments for network deployer without versions.
+func (d *NetworkDeployer) generateVersionlessDeployments(ctx context.Context, zNets []workloads.Network) (map[uint32][]zos.Deployment, error) {
 	deployments := make(map[uint32][]zos.Deployment)
 	endpoints := make(map[uint32]net.IP)
 	nodeUsedPorts := make(map[uint32][]uint16)
@@ -90,12 +90,12 @@ func (d *NetworkDeployer) GenerateVersionlessDeployments(ctx context.Context, zN
 func (d *NetworkDeployer) Deploy(ctx context.Context, znet workloads.Network) error {
 	zNets, err := d.Validate(ctx, []workloads.Network{znet})
 	if err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
-	nodeDeployments, err := d.GenerateVersionlessDeployments(ctx, zNets)
+	nodeDeployments, err := d.generateVersionlessDeployments(ctx, zNets)
 	if err != nil {
-		return errors.Wrap(err, "could not generate deployments data")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not generate deployments data"))
 	}
 
 	newDeployments := make(map[uint32]zos.Deployment)
@@ -140,16 +140,16 @@ func (d *NetworkDeployer) Deploy(ctx context.Context, znet workloads.Network) er
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "could not deploy network %s", znet.GetName())
+		return d.tfPluginClient.sentry.error(errors.Wrapf(err, "could not deploy network %s", znet.GetName()))
 	}
 
 	dls, err := d.deployer.GetDeployments(ctx, znet.GetNodeDeploymentID())
 	if err != nil {
-		return errors.Wrap(err, "failed to get deployment objects")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to get deployment objects"))
 	}
 
 	if err := znet.ReadNodesConfig(ctx, dls); err != nil {
-		return errors.Wrap(err, "could not read node's data")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not read node's data"))
 	}
 
 	return nil
@@ -163,15 +163,15 @@ func (d *NetworkDeployer) BatchDeploy(ctx context.Context, zNets []workloads.Net
 		multiErr = multierror.Append(multiErr, err)
 	}
 	if len(filteredZNets) == 0 {
-		return multiErr
+		return d.tfPluginClient.sentry.error(multiErr)
 	}
 
-	newDeployments, err := d.GenerateVersionlessDeployments(ctx, filteredZNets)
+	newDeployments, err := d.generateVersionlessDeployments(ctx, filteredZNets)
 	if err != nil {
 		multiErr = multierror.Append(multiErr, err)
 	}
 	if len(newDeployments) == 0 {
-		return multiErr
+		return d.tfPluginClient.sentry.error(multiErr)
 	}
 
 	newDls, err := d.deployer.BatchDeploy(ctx, newDeployments, make(map[uint32][]*uint64))
@@ -188,24 +188,24 @@ func (d *NetworkDeployer) BatchDeploy(ctx context.Context, zNets []workloads.Net
 	// error is not returned immediately before updating state because of untracked failed deployments
 	for _, znet := range zNets {
 		if err := d.updateStateFromDeployments(ctx, znet, newDls, update); err != nil {
-			return errors.Wrapf(err, "failed to update network '%s' state", znet.GetName())
+			return d.tfPluginClient.sentry.error(errors.Wrapf(err, "failed to update network '%s' state", znet.GetName()))
 		}
 	}
 
-	return multiErr
+	return d.tfPluginClient.sentry.error(multiErr)
 }
 
 // Cancel cancels all the deployments
 func (d *NetworkDeployer) Cancel(ctx context.Context, znet workloads.Network) error {
 	err := validateAccountBalanceForExtrinsics(d.tfPluginClient.SubstrateConn, d.tfPluginClient.Identity)
 	if err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	for nodeID, contractID := range znet.GetNodeDeploymentID() {
 		err = d.deployer.Cancel(ctx, contractID)
 		if err != nil {
-			return errors.Wrapf(err, "could not cancel network %s, contract %d", znet.GetName(), contractID)
+			return d.tfPluginClient.sentry.error(errors.Wrapf(err, "could not cancel network %s, contract %d", znet.GetName(), contractID))
 		}
 		znetDeploymentsIDs := znet.GetNodeDeploymentID()
 		delete(znetDeploymentsIDs, nodeID)
@@ -218,11 +218,11 @@ func (d *NetworkDeployer) Cancel(ctx context.Context, znet workloads.Network) er
 
 	dls, err := d.deployer.GetDeployments(ctx, znet.GetNodeDeploymentID())
 	if err != nil {
-		return errors.Wrap(err, "failed to get deployment objects")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to get deployment objects"))
 	}
 
 	if err := znet.ReadNodesConfig(ctx, dls); err != nil {
-		return errors.Wrap(err, "could not read node's data")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not read node's data"))
 	}
 
 	return nil
@@ -241,7 +241,7 @@ func (d *NetworkDeployer) BatchCancel(ctx context.Context, znets []workloads.Net
 	}
 	err := d.tfPluginClient.BatchCancelContract(contracts)
 	if err != nil {
-		return fmt.Errorf("failed to cancel contracts: %w", err)
+		return d.tfPluginClient.sentry.error(fmt.Errorf("failed to cancel contracts: %w", err))
 	}
 	for _, znet := range znets {
 		for nodeID, contractID := range znet.GetNodeDeploymentID() {

@@ -30,32 +30,32 @@ func NewGatewayFqdnDeployer(tfPluginClient *TFPluginClient) GatewayFQDNDeployer 
 func (d *GatewayFQDNDeployer) Validate(ctx context.Context, gw *workloads.GatewayFQDNProxy) error {
 	sub := d.tfPluginClient.SubstrateConn
 	if err := validateAccountBalanceForExtrinsics(sub, d.tfPluginClient.Identity); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	if err := gw.Validate(); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	nodeClient, err := d.tfPluginClient.NcPool.GetNodeClient(sub, gw.NodeID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get node client with ID %d", gw.NodeID)
+		return d.tfPluginClient.sentry.error(errors.Wrapf(err, "failed to get node client with ID %d", gw.NodeID))
 	}
 
 	cfg, err := nodeClient.NetworkGetPublicConfig(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "couldn't get node %d public config", gw.NodeID)
+		return d.tfPluginClient.sentry.error(errors.Wrapf(err, "couldn't get node %d public config", gw.NodeID))
 	}
 
 	if cfg.IPv4.IP == nil {
-		return errors.Errorf("node %d doesn't contain a public IP in its public config", gw.NodeID)
+		return d.tfPluginClient.sentry.error(errors.Errorf("node %d doesn't contain a public IP in its public config", gw.NodeID))
 	}
 
-	return client.AreNodesUp(ctx, sub, []uint32{gw.NodeID}, d.tfPluginClient.NcPool)
+	return d.tfPluginClient.sentry.error(client.AreNodesUp(ctx, sub, []uint32{gw.NodeID}, d.tfPluginClient.NcPool))
 }
 
 // GenerateVersionlessDeployments generates deployments for gatewayFqdn deployer without versions
-func (d *GatewayFQDNDeployer) GenerateVersionlessDeployments(ctx context.Context, gw *workloads.GatewayFQDNProxy) (map[uint32]zosTypes.Deployment, error) {
+func (d *GatewayFQDNDeployer) generateVersionlessDeployments(ctx context.Context, gw *workloads.GatewayFQDNProxy) (map[uint32]zosTypes.Deployment, error) {
 	deployments := make(map[uint32]zosTypes.Deployment)
 	var err error
 
@@ -74,12 +74,12 @@ func (d *GatewayFQDNDeployer) GenerateVersionlessDeployments(ctx context.Context
 // Deploy deploys the GatewayFQDN deployments using the deployer
 func (d *GatewayFQDNDeployer) Deploy(ctx context.Context, gw *workloads.GatewayFQDNProxy) error {
 	if err := d.Validate(ctx, gw); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
-	newDeployments, err := d.GenerateVersionlessDeployments(ctx, gw)
+	newDeployments, err := d.generateVersionlessDeployments(ctx, gw)
 	if err != nil {
-		return errors.Wrap(err, "could not generate deployments data")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not generate deployments data"))
 	}
 
 	// TODO: solution providers
@@ -97,7 +97,7 @@ func (d *GatewayFQDNDeployer) Deploy(ctx context.Context, gw *workloads.GatewayF
 		}
 	}
 
-	return err
+	return d.tfPluginClient.sentry.error(err)
 }
 
 // BatchDeploy deploys multiple deployments using the deployer
@@ -107,12 +107,12 @@ func (d *GatewayFQDNDeployer) BatchDeploy(ctx context.Context, gws []*workloads.
 
 	for _, gw := range gws {
 		if err := d.Validate(ctx, gw); err != nil {
-			return err
+			return d.tfPluginClient.sentry.error(err)
 		}
 
-		dls, err := d.GenerateVersionlessDeployments(ctx, gw)
+		dls, err := d.generateVersionlessDeployments(ctx, gw)
 		if err != nil {
-			return errors.Wrap(err, "could not generate deployments data")
+			return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not generate deployments data"))
 		}
 
 		for nodeID, dl := range dls {
@@ -133,23 +133,23 @@ func (d *GatewayFQDNDeployer) BatchDeploy(ctx context.Context, gws []*workloads.
 	// error is not returned immediately before updating state because of untracked failed deployments
 	for _, gw := range gws {
 		if err := d.updateStateFromDeployments(gw, newDls); err != nil {
-			return errors.Wrapf(err, "failed to update gateway fqdn '%s' state", gw.Name)
+			return d.tfPluginClient.sentry.error(errors.Wrapf(err, "failed to update gateway fqdn '%s' state", gw.Name))
 		}
 	}
 
-	return err
+	return d.tfPluginClient.sentry.error(err)
 }
 
 // Cancel cancels a gateway deployment
 func (d *GatewayFQDNDeployer) Cancel(ctx context.Context, gw *workloads.GatewayFQDNProxy) (err error) {
 	if err := d.Validate(ctx, gw); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	contractID := gw.NodeDeploymentID[gw.NodeID]
 	err = d.deployer.Cancel(ctx, contractID)
 	if err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	// update state
@@ -198,12 +198,12 @@ func (d *GatewayFQDNDeployer) syncContracts(ctx context.Context, gw *workloads.G
 // Sync syncs the gateway deployments
 func (d *GatewayFQDNDeployer) Sync(ctx context.Context, gw *workloads.GatewayFQDNProxy) error {
 	if err := d.syncContracts(ctx, gw); err != nil {
-		return errors.Wrap(err, "could not sync contracts")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not sync contracts"))
 	}
 
 	dls, err := d.deployer.GetDeployments(ctx, gw.NodeDeploymentID)
 	if err != nil {
-		return errors.Wrap(err, "could not get deployment objects")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not get deployment objects"))
 	}
 
 	dl := dls[gw.NodeID]
@@ -225,7 +225,7 @@ func (d *GatewayFQDNDeployer) Sync(ctx context.Context, gw *workloads.GatewayFQD
 		gw.Network = gwWorkload.Network
 
 		if err != nil {
-			return err
+			return d.tfPluginClient.sentry.error(err)
 		}
 	}
 

@@ -43,6 +43,7 @@ require (
 	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6 // indirect
+	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/manucorporat/sse v0.0.0-20160126180136-ee05b128a739 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -59,7 +60,7 @@ require (
 	github.com/stellar/go-xdr v0.0.0-20230919160922-6c7b68458206 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect
-	github.com/valyala/fasthttp v1.40.0 // indirect
+	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/vedhavyas/go-subkey v1.0.3 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect

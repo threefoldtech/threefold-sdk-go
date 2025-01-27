@@ -38,15 +38,15 @@ func (d *K8sDeployer) Validate(ctx context.Context, k8sCluster *workloads.K8sClu
 	sub := d.tfPluginClient.SubstrateConn
 
 	if err := validateAccountBalanceForExtrinsics(sub, d.tfPluginClient.Identity); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	if err := d.tfPluginClient.State.AssignNodesIPRange(k8sCluster); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	if err := k8sCluster.Validate(); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	// validate cluster nodes
@@ -57,11 +57,11 @@ func (d *K8sDeployer) Validate(ctx context.Context, k8sCluster *workloads.K8sClu
 			nodes = append(nodes, worker.NodeID)
 		}
 	}
-	return client.AreNodesUp(ctx, sub, nodes, d.tfPluginClient.NcPool)
+	return d.tfPluginClient.sentry.error(client.AreNodesUp(ctx, sub, nodes, d.tfPluginClient.NcPool))
 }
 
-// GenerateVersionlessDeployments generates a new deployment without a version
-func (d *K8sDeployer) GenerateVersionlessDeployments(ctx context.Context, k8sCluster *workloads.K8sCluster) (map[uint32]zosTypes.Deployment, error) {
+// generateVersionlessDeployments generates a new deployment without a version
+func (d *K8sDeployer) generateVersionlessDeployments(k8sCluster *workloads.K8sCluster) (map[uint32]zosTypes.Deployment, error) {
 	err := d.assignNodesIPs(k8sCluster)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to assign node ips")
@@ -95,23 +95,23 @@ func (d *K8sDeployer) GenerateVersionlessDeployments(ctx context.Context, k8sClu
 // Deploy deploys a k8s cluster deployment
 func (d *K8sDeployer) Deploy(ctx context.Context, k8sCluster *workloads.K8sCluster) error {
 	if err := d.tfPluginClient.State.AssignNodesIPRange(k8sCluster); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	err := k8sCluster.InvalidateBrokenAttributes(d.tfPluginClient.SubstrateConn)
 	if err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
 	assignNodesFlistsAndEntryPoints(k8sCluster)
 
 	if err := d.Validate(ctx, k8sCluster); err != nil {
-		return err
+		return d.tfPluginClient.sentry.error(err)
 	}
 
-	newDeployments, err := d.GenerateVersionlessDeployments(ctx, k8sCluster)
+	newDeployments, err := d.generateVersionlessDeployments(k8sCluster)
 	if err != nil {
-		return errors.Wrap(err, "could not generate k8s grid deployments")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not generate k8s grid deployments"))
 	}
 
 	newDeploymentsSolutionProvider := make(map[uint32]*uint64)
@@ -138,23 +138,23 @@ func (d *K8sDeployer) BatchDeploy(ctx context.Context, k8sClusters []*workloads.
 
 	for _, k8sCluster := range k8sClusters {
 		if err := d.tfPluginClient.State.AssignNodesIPRange(k8sCluster); err != nil {
-			return err
+			return d.tfPluginClient.sentry.error(err)
 		}
 
 		err := k8sCluster.InvalidateBrokenAttributes(d.tfPluginClient.SubstrateConn)
 		if err != nil {
-			return err
+			return d.tfPluginClient.sentry.error(err)
 		}
 
 		assignNodesFlistsAndEntryPoints(k8sCluster)
 
 		if err := d.Validate(ctx, k8sCluster); err != nil {
-			return err
+			return d.tfPluginClient.sentry.error(err)
 		}
 
-		dls, err := d.GenerateVersionlessDeployments(ctx, k8sCluster)
+		dls, err := d.generateVersionlessDeployments(k8sCluster)
 		if err != nil {
-			return errors.Wrap(err, "could not generate k8s grid deployments")
+			return d.tfPluginClient.sentry.error(errors.Wrap(err, "could not generate k8s grid deployments"))
 		}
 
 		for nodeID, dl := range dls {
@@ -175,11 +175,11 @@ func (d *K8sDeployer) BatchDeploy(ctx context.Context, k8sClusters []*workloads.
 	// error is not returned immediately before updating state because of untracked failed deployments
 	for _, k8sCluster := range k8sClusters {
 		if err := d.updateStateFromDeployments(k8sCluster, newDls); err != nil {
-			return errors.Wrapf(err, "failed to update cluster with master name '%s' state", k8sCluster.Master.Name)
+			return d.tfPluginClient.sentry.error(errors.Wrapf(err, "failed to update cluster with master name '%s' state", k8sCluster.Master.Name))
 		}
 	}
 
-	return err
+	return d.tfPluginClient.sentry.error(err)
 }
 
 // Cancel cancels a k8s cluster deployment
@@ -188,7 +188,7 @@ func (d *K8sDeployer) Cancel(ctx context.Context, k8sCluster *workloads.K8sClust
 		if k8sCluster.Master.NodeID == nodeID {
 			err = d.deployer.Cancel(ctx, contractID)
 			if err != nil {
-				return errors.Wrapf(err, "could not cancel master %s, contract %d", k8sCluster.Master.Name, contractID)
+				return d.tfPluginClient.sentry.error(errors.Wrapf(err, "could not cancel master %s, contract %d", k8sCluster.Master.Name, contractID))
 			}
 			d.tfPluginClient.State.CurrentNodeDeployments[nodeID] = workloads.Delete(d.tfPluginClient.State.CurrentNodeDeployments[nodeID], contractID)
 			delete(k8sCluster.NodeDeploymentID, nodeID)
@@ -198,7 +198,7 @@ func (d *K8sDeployer) Cancel(ctx context.Context, k8sCluster *workloads.K8sClust
 			if worker.NodeID == nodeID {
 				err = d.deployer.Cancel(ctx, contractID)
 				if err != nil {
-					return errors.Wrapf(err, "could not cancel worker %s, contract %d", worker.Name, contractID)
+					return d.tfPluginClient.sentry.error(errors.Wrapf(err, "could not cancel worker %s, contract %d", worker.Name, contractID))
 				}
 				d.tfPluginClient.State.CurrentNodeDeployments[nodeID] = workloads.Delete(d.tfPluginClient.State.CurrentNodeDeployments[nodeID], contractID)
 				delete(k8sCluster.NodeDeploymentID, nodeID)
@@ -248,11 +248,11 @@ func (d *K8sDeployer) updateStateFromDeployments(k8sCluster *workloads.K8sCluste
 // UpdateFromRemote update a k8s cluster
 func (d *K8sDeployer) UpdateFromRemote(ctx context.Context, k8sCluster *workloads.K8sCluster) error {
 	if err := d.removeDeletedContracts(k8sCluster); err != nil {
-		return errors.Wrap(err, "failed to remove deleted contracts")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to remove deleted contracts"))
 	}
 	currentDeployments, err := d.deployer.GetDeployments(ctx, k8sCluster.NodeDeploymentID)
 	if err != nil {
-		return errors.Wrap(err, "failed to fetch remote deployments")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to fetch remote deployments"))
 	}
 	zerolog.Debug().Msg("calling updateFromRemote")
 
@@ -306,18 +306,18 @@ func (d *K8sDeployer) UpdateFromRemote(ctx context.Context, k8sCluster *workload
 				workloadObj[w.Name] = *w.Workload3()
 
 			} else if w.Type == zosTypes.PublicIPType {
-				d := zos.PublicIPResult{}
+				ipResult := zos.PublicIPResult{}
 				if err := json.Unmarshal(w.Result.Data, &d); err != nil {
-					return errors.Wrap(err, "failed to load public ip data")
+					return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to load public ip data"))
 				}
-				publicIPs[w.Name] = d.IP.String()
-				publicIP6s[w.Name] = d.IPv6.String()
+				publicIPs[w.Name] = ipResult.IP.String()
+				publicIP6s[w.Name] = ipResult.IPv6.String()
 			} else if w.Type == zosTypes.ZMountType {
-				d, err := w.Workload3().WorkloadData()
+				wl, err := w.Workload3().WorkloadData()
 				if err != nil {
-					return errors.Wrap(err, "failed to load disk data")
+					return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to load disk data"))
 				}
-				diskSize[w.Name] = uint64(d.(*zos.ZMount).Size) / zosTypes.Gigabyte
+				diskSize[w.Name] = uint64(wl.(*zos.ZMount).Size) / zosTypes.Gigabyte
 			}
 		}
 	}
@@ -344,7 +344,7 @@ func (d *K8sDeployer) UpdateFromRemote(ctx context.Context, k8sCluster *workload
 
 		m, err := workloads.NewK8sNodeFromWorkload(masterWorkload, masterNodeID, masterDiskSize, masterIP, masterIP6)
 		if err != nil {
-			return errors.Wrap(err, "failed to get master node from workload")
+			return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to get master node from workload"))
 		}
 		k8sCluster.Master = &m
 	}
@@ -364,7 +364,7 @@ func (d *K8sDeployer) UpdateFromRemote(ctx context.Context, k8sCluster *workload
 		workerDiskSize := workloadDiskSize[w.Name]
 		w, err := workloads.NewK8sNodeFromWorkload(workerWorkload, workerNodeID, workerDiskSize, workerIP, workerIP6)
 		if err != nil {
-			return errors.Wrap(err, "failed to get worker data from workload")
+			return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to get worker data from workload"))
 		}
 		workers = append(workers, w)
 	}
@@ -379,7 +379,7 @@ func (d *K8sDeployer) UpdateFromRemote(ctx context.Context, k8sCluster *workload
 		workerDiskSize := workloadDiskSize[name]
 		w, err := workloads.NewK8sNodeFromWorkload(workerWorkload, workerNodeID, workerDiskSize, workerIP, workerIP6)
 		if err != nil {
-			return errors.Wrap(err, "failed to get worker data from workload")
+			return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to get worker data from workload"))
 		}
 		workers = append(workers, w)
 	}
@@ -389,7 +389,7 @@ func (d *K8sDeployer) UpdateFromRemote(ctx context.Context, k8sCluster *workload
 	enc.SetIndent("", "  ")
 	err = enc.Encode(k8sCluster)
 	if err != nil {
-		return errors.Wrap(err, "failed to encode k8s deployer")
+		return d.tfPluginClient.sentry.error(errors.Wrap(err, "failed to encode k8s deployer"))
 	}
 
 	return nil

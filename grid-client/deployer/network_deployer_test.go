@@ -110,7 +110,7 @@ func TestNetworkDeployer(t *testing.T) {
 			Return(client.NewNodeClient(twinID, cl, d.tfPluginClient.RMBTimeout), nil).
 			AnyTimes()
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), []workloads.Network{&znet})
+		dls, err := d.generateVersionlessDeployments(context.Background(), []workloads.Network{&znet})
 		assert.NoError(t, err)
 
 		externalIP := ""
