@@ -50,3 +50,15 @@ func callNode(ctx context.Context, rmbClient *peer.RpcClient, cmd string, payloa
 
 	return rmbClient.Call(subCtx, twinId, cmd, payload, result)
 }
+
+func removeDuplicates[T any, K comparable](items []T, keyFunc func(T) K) (result []T) {
+	seen := make(map[K]bool)
+	for _, item := range items {
+		key := keyFunc(item)
+		if _, ok := seen[key]; !ok {
+			seen[key] = true
+			result = append(result, item)
+		}
+	}
+	return
+}

@@ -363,7 +363,7 @@ func (n *Node) satisfies(f types.NodeFilter, data *DBData) bool {
 		return false
 	}
 
-	if f.Region != nil && !strings.EqualFold(*f.Region, data.Regions[strings.ToLower(n.Country)]) {
+	if f.Region != nil && !strings.EqualFold(*f.Region, data.Regions[n.Country]) {
 		return false
 	}
 

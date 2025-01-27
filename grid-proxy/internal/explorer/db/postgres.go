@@ -136,6 +136,9 @@ func (d *PostgresDatabase) GetLastUpsertsTimestamp() (types.IndexersState, error
 	if res := d.gormDB.Table("node_features").Select("updated_at").Where("updated_at IS NOT NULL").Order("updated_at DESC").Limit(1).Scan(&report.Features.UpdatedAt); res.Error != nil {
 		return report, errors.Wrap(res.Error, "couldn't get features last updated_at")
 	}
+	if res := d.gormDB.Table("node_location").Select("updated_at").Where("updated_at IS NOT NULL").Order("updated_at DESC").Limit(1).Scan(&report.Features.UpdatedAt); res.Error != nil {
+		return report, errors.Wrap(res.Error, "couldn't get features last updated_at")
+	}
 	return report, nil
 }
 
@@ -148,6 +151,7 @@ func (d *PostgresDatabase) Initialize() error {
 		&types.HasIpv6{},
 		&types.NodesWorkloads{},
 		&types.NodeFeatures{},
+		&types.NodeLocation{},
 	); err != nil {
 		return errors.Wrap(err, "failed to migrate indexer tables")
 	}
@@ -387,6 +391,7 @@ func (d *PostgresDatabase) nodeTableQuery(ctx context.Context, filter types.Node
 			LEFT JOIN health_report ON node.twin_id = health_report.node_twin_id
 			LEFT JOIN node_ipv6 ON node.twin_id = node_ipv6.node_twin_id
 			LEFT JOIN node_features ON node.twin_id = node_features.node_twin_id
+			LEFT JOIN node_location ON node.country = node_location.country
 		`)
 
 	if filter.IsGpuFilterRequested() {
@@ -440,7 +445,10 @@ func (d *PostgresDatabase) farmTableQuery(ctx context.Context, filter types.Farm
 func (d *PostgresDatabase) GetFarms(ctx context.Context, filter types.FarmFilter, limit types.Limit) ([]Farm, uint, error) {
 	nodeQuery := d.gormDB.Table("resources_cache").
 		Select("resources_cache.farm_id", "renter", "resources_cache.extra_fee").
-		Joins("LEFT JOIN node ON node.node_id = resources_cache.node_id").
+		Joins(`
+			LEFT JOIN node ON node.node_id = resources_cache.node_id
+			LEFT JOIN node_location ON node_location.country = resources_cache.country
+		`).
 		Group(`resources_cache.farm_id, renter, resources_cache.extra_fee`)
 
 	if filter.NodeFreeMRU != nil {
@@ -469,7 +477,7 @@ func (d *PostgresDatabase) GetFarms(ctx context.Context, filter types.FarmFilter
 	}
 
 	if filter.Region != nil {
-		nodeQuery = nodeQuery.Where("LOWER(resources_cache.region) = LOWER(?)", *filter.Region)
+		nodeQuery = nodeQuery.Where("LOWER(node_location.continent) = LOWER(?)", *filter.Region)
 	}
 
 	if len(filter.NodeStatus) != 0 {
@@ -673,7 +681,7 @@ func (d *PostgresDatabase) GetNodes(ctx context.Context, filter types.NodeFilter
 		q = q.Where("node.city ILIKE '%' || ? || '%'", *filter.CityContains)
 	}
 	if filter.Region != nil {
-		q = q.Where("LOWER(resources_cache.region) = LOWER(?)", *filter.Region)
+		q = q.Where("LOWER(node_location.continent) = LOWER(?)", *filter.Region)
 	}
 	if filter.NodeID != nil {
 		q = q.Where("node.node_id = ?", *filter.NodeID)

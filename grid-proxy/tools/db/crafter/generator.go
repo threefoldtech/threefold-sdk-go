@@ -806,41 +806,6 @@ func (c *Crafter) GenerateNodeGPUs() error {
 	return nil
 }
 
-func (c *Crafter) GenerateCountries() error {
-	var countriesValues []string
-
-	// depends on nodeStart to not duplicate the value of country.id
-	start := c.NodeStart
-
-	index := start
-	for countryName, region := range regions {
-		index++
-		country := country{
-			id:         fmt.Sprintf("country-%d", index),
-			country_id: uint64(index),
-			name:       countryName,
-			code:       countriesCodes[countryName],
-			region:     region,
-			subregion:  "unknown",
-			lat:        fmt.Sprintf("%d", 0),
-			long:       fmt.Sprintf("%d", 0),
-		}
-
-		countryTuple, err := objectToTupleString(country)
-		if err != nil {
-			return fmt.Errorf("failed to convert country object to tuple string: %w", err)
-		}
-		countriesValues = append(countriesValues, countryTuple)
-	}
-
-	if err := c.insertTuples(country{}, countriesValues); err != nil {
-		return fmt.Errorf("failed to insert country: %w", err)
-	}
-	fmt.Println("countries generated")
-
-	return nil
-}
-
 func (c *Crafter) GenerateSpeedReports() error {
 	start := c.NodeStart
 	end := c.NodeStart + c.NodeCount
@@ -1015,7 +980,26 @@ func (c *Crafter) GenerateNodeFeatures() error {
 	if err := c.gormDB.Create(reports).Error; err != nil {
 		return fmt.Errorf("failed to insert node features reports: %w", err)
 	}
-	fmt.Println("node features number reports generated")
+	fmt.Println("node features reports generated")
+
+	return nil
+}
+
+func (c *Crafter) GenerateLocations() error {
+	var reports []types.NodeLocation
+	for country, region := range regions {
+		report := types.NodeLocation{
+			Country:   country,
+			Continent: region,
+			UpdatedAt: time.Now().Unix(),
+		}
+		reports = append(reports, report)
+	}
+
+	if err := c.gormDB.Create(reports).Error; err != nil {
+		return fmt.Errorf("failed to insert node location reports: %w", err)
+	}
+	fmt.Println("node location reports generated")
 
 	return nil
 }

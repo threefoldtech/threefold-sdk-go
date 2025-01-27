@@ -40,8 +40,10 @@ func (w *HealthWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32
 
 func (w *HealthWork) Upsert(ctx context.Context, db db.Database, batch []types.HealthReport) error {
 	// to prevent having multiple data for the same twin from different finders
-	batch = removeDuplicates(batch)
-	return db.UpsertNodeHealth(ctx, batch)
+	unique := removeDuplicates(batch, func(n types.HealthReport) uint32 {
+		return n.NodeTwinId
+	})
+	return db.UpsertNodeHealth(ctx, unique)
 }
 
 func getHealthReport(response diagnostics.Diagnostics, twinId uint32) types.HealthReport {
@@ -52,17 +54,4 @@ func getHealthReport(response diagnostics.Diagnostics, twinId uint32) types.Heal
 	}
 
 	return report
-}
-
-func removeDuplicates(reports []types.HealthReport) []types.HealthReport {
-	seen := make(map[uint32]bool)
-	result := []types.HealthReport{}
-	for _, report := range reports {
-		if _, ok := seen[report.NodeTwinId]; !ok {
-			seen[report.NodeTwinId] = true
-			result = append(result, report)
-		}
-	}
-
-	return result
 }

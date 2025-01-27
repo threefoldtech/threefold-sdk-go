@@ -10,12 +10,6 @@ var (
 		"Egypt":          "Africa",
 		"United Kingdom": "Europe",
 	}
-	countriesCodes = map[string]string{
-		"Belgium":        "BG",
-		"United States":  "US",
-		"Egypt":          "EG",
-		"United Kingdom": "UK",
-	}
 	cities = map[string][]string{
 		"Belgium":        {"Brussels", "Antwerp", "Ghent", "Charleroi"},
 		"United States":  {"New York", "Chicago", "Los Angeles", "San Francisco"},

@@ -42,6 +42,7 @@ type Database interface {
 	UpsertNodeIpv6Report(ctx context.Context, ips []types.HasIpv6) error
 	UpsertNodeWorkloads(ctx context.Context, workloads []types.NodesWorkloads) error
 	UpsertNodeFeatures(ctx context.Context, features []types.NodeFeatures) error
+	UpsertNodeLocation(ctx context.Context, locations []types.NodeLocation) error
 }
 
 type ContractBilling types.ContractBilling

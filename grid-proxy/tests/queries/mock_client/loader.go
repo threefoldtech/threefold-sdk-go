@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"math"
-	"strings"
 
 	"github.com/threefoldtech/tfgrid-sdk-go/grid-proxy/pkg/types"
 	"github.com/threefoldtech/zos/pkg/gridtypes"
@@ -450,44 +449,6 @@ func loadContractBillingReports(db *sql.DB, data *DBData) error {
 	return nil
 }
 
-func loadCountries(db *sql.DB, data *DBData) error {
-	rows, err := db.Query(`
-	SELECT
-		COALESCE(id, ''),
-		COALESCE(country_id, 0),
-		COALESCE(code, ''),
-		COALESCE(name, ''),
-		COALESCE(region, ''),
-		COALESCE(subregion, ''),
-		COALESCE(lat, ''),
-		COALESCE(long, '')
-	FROM
-		country;
-	`)
-	if err != nil {
-		return err
-	}
-
-	for rows.Next() {
-		var country Country
-		if err := rows.Scan(
-			&country.ID,
-			&country.CountryID,
-			&country.Code,
-			&country.Name,
-			&country.Region,
-			&country.Subregion,
-			&country.Lat,
-			&country.Long,
-		); err != nil {
-			return err
-		}
-		data.Regions[strings.ToLower(country.Name)] = country.Region
-	}
-
-	return nil
-}
-
 func loadLocations(db *sql.DB, data *DBData) error {
 	rows, err := db.Query(`
 	SELECT 
@@ -735,6 +696,30 @@ func loadPricingPolicies(db *sql.DB, data *DBData) error {
 	return nil
 }
 
+func loadNodeLocation(db *sql.DB, data *DBData) error {
+	rows, err := db.Query(`
+	SELECT
+		COALESCE(continent, ''),
+		COALESCE(country, '')
+	FROM
+		node_location;`)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var loc types.NodeLocation
+		if err := rows.Scan(
+			&loc.Continent,
+			&loc.Country,
+		); err != nil {
+			return err
+		}
+		data.Regions[loc.Country] = loc.Continent
+	}
+
+	return nil
+}
+
 func parseUnit(unitString string) Unit {
 	var unit Unit
 	_ = json.Unmarshal([]byte(unitString), &unit)
@@ -812,13 +797,13 @@ func Load(db *sql.DB, gormDB *gorm.DB) (DBData, error) {
 	if err := loadNodeGPUs(db, &data); err != nil {
 		return data, err
 	}
-	if err := loadCountries(db, &data); err != nil {
-		return data, err
-	}
 	if err := loadLocations(db, &data); err != nil {
 		return data, err
 	}
 	if err := loadHealthReports(db, &data); err != nil {
+		return data, err
+	}
+	if err := loadNodeLocation(db, &data); err != nil {
 		return data, err
 	}
 	if err := loadNodeIpv6(db, &data); err != nil {
