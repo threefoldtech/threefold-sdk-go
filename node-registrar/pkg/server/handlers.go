@@ -392,9 +392,11 @@ func parseQueryParams(c *gin.Context, types_ ...interface{}) error {
 
 // AccountRequest represents the request body for account operations
 type AccountCreationRequest struct {
-	PublicKey string `json:"public_key" binding:"required"`
-	Signature string `json:"signature" binding:"required"`
-	Timestamp int64  `json:"timestamp" binding:"required"`
+	PublicKey string   `json:"public_key" binding:"required"`
+	Signature string   `json:"signature" binding:"required"`
+	Timestamp int64    `json:"timestamp" binding:"required"`
+	Relays    []string `json:"relays,omitempty"`
+	RMBEncKey string   `json:"rmb_enc_key,omitempty"`
 }
 
 const (
@@ -480,6 +482,49 @@ func (s *Server) createAccountHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, account)
+}
+
+type UpdateAccountRequest struct {
+	Relays    []string `json:"relays"`
+	RMBEncKey string   `json:"rmb_enc_key"`
+}
+
+// updateAccountHandler updates an account's relays and RMB encryption key
+// @Summary Update account details
+// @Description Updates an account's relays and RMB encryption key
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param twin_id path uint64 true "Twin ID of the account"
+// @Param account body UpdateAccountRequest true "Account details to update"
+// @Success 200 {object} gin.H "Account updated successfully"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 404 {object} gin.H "Account not found"
+// @Router /accounts/{twin_id} [patch]
+func (s *Server) updateAccountHandler(c *gin.Context) {
+	twinID, err := strconv.ParseUint(c.Param("twin_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid twin ID"})
+		return
+	}
+
+	var req UpdateAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	err = s.db.UpdateAccount(twinID, req.Relays, req.RMBEncKey)
+	if err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update account"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "account updated successfully"})
 }
 
 // getAccountHandler retrieves an account by twin ID

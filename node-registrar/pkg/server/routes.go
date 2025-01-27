@@ -34,5 +34,6 @@ func (s *Server) SetupRoutes() {
 	accountRoutes := v1.Group("accounts")
 	accountRoutes.POST("/", s.createAccountHandler)
 	accountRoutes.GET("/:twin_id", s.getAccountHandler)
+	accountRoutes.PATCH("/:twin_id", s.updateAccountHandler)
 
 }

@@ -10,7 +10,9 @@ import (
 )
 
 type Account struct {
-	TwinID    uint64 `gorm:"primaryKey;autoIncrement"`
+	TwinID    uint64   `gorm:"primaryKey;autoIncrement"`
+	Relays    []string `gorm:"type:text[];default:'{}'" json:"relays"` // Optional list of relay domains
+	RMBEncKey string   `gorm:"type:text" json:"rmb_enc_key"`           // Optional base64 encoded public key for rmb communication
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	PublicKey string `gorm:"type:text;not null;unique"` // ED25519 public key in the more standard base64 since we are moving from substarte echo system? (still SS58 can be used or plain base58 ,TBD)
