@@ -15,26 +15,26 @@ type Account struct {
 	UpdatedAt time.Time
 	PublicKey string `gorm:"type:text;not null;unique"` // ED25519 public key in the more standard base64 since we are moving from substarte echo system? (still SS58 can be used or plain base58 ,TBD)
 	// Relations
-	Farms []Farm `gorm:"foreignKey:TwinID;references:TwinID"`
-	Nodes []Node `gorm:"foreignKey:TwinID;references:TwinID"`
+	Farms []Farm `gorm:"foreignKey:TwinID;references:TwinID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 type Farm struct {
 	FarmID      uint64 `gorm:"primaryKey;autoIncrement" json:"farm_id"`
 	FarmName    string `gorm:"size:40;not null;unique;check:farm_name <> ''" json:"farm_name"`
-	TwinID      uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"`
+	TwinID      uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"` // Farmer account refrence
 	Dedicated   bool   `json:"dedicated"`
 	FarmFreeIps uint64 `json:"farm_free_ips"`
 
 	CreatedAt time.Time
+	UpdatedAt time.Time
 
-	Nodes []Node `gorm:"foreignKey:farm_id;constraint:OnDelete:CASCADE" json:"nodes"`
+	Nodes []Node `gorm:"foreignKey:FarmID;references:FarmID;constraint:OnDelete:CASCADE" json:"nodes"`
 }
 
 type Node struct {
 	NodeID uint64 `json:"node_id" gorm:"primaryKey;autoIncrement"`
-	FarmID uint64 `json:"farm_id" gorm:"not null;check:farm_id> 0"`
-	TwinID uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"`
+	FarmID uint64 `json:"farm_id" gorm:"not null;check:farm_id> 0;foreignKey:FarmID;references:FarmID;constraint:OnDelete:CASCADE"`
+	TwinID uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0;foreignKey:TwinID;references:TwinID;constraint:OnDelete:CASCADE"` // Node account reference
 
 	ZosVersion string `json:"zos_version" gorm:"not null"`
 	NodeType   string `json:"node_type" gorm:"not null"`
@@ -48,8 +48,8 @@ type Node struct {
 	Virtualized  bool
 	SerialNumber string
 
-	Uptime      Uptime      `json:"uptime"`
-	Consumption Consumption `json:"consumption" gorm:"type:jsonb;serializer:json"`
+	UptimeReports []UptimeReport `json:"uptime" gorm:"foreignKey:NodeID;references:NodeID;constraint:OnDelete:CASCADE"`
+	Consumption   Consumption    `json:"consumption" gorm:"type:jsonb;serializer:json"`
 
 	PriceUsd float64 `json:"price_usd"`
 	Status   string  `json:"status"`
@@ -60,8 +60,14 @@ type Node struct {
 
 type Consumption []substrate.NruConsumption
 
-type Uptime int64
-
+type UptimeReport struct {
+	ID         uint64        `gorm:"primaryKey;autoIncrement"`
+	NodeID     uint64        `gorm:"index"`
+	Duration   time.Duration // Uptime duration for this period
+	Timestamp  time.Time     `gorm:"index"`
+	WasRestart bool          // True if this report followed a restart
+	CreatedAt  time.Time
+}
 type Interface struct {
 	Name string `json:"name"`
 	Mac  string `json:"mac"`

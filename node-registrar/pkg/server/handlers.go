@@ -287,49 +287,55 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 	})
 }
 
+type UptimeReportRequest struct {
+	NodeID    uint64        `json:"node_id" binding:"required"`
+	Uptime    time.Duration `json:"uptime" binding:"required"`
+	Timestamp time.Time     `json:"timestamp" binding:"required"`
+}
+
 // @Summary uptime report
 // @Description save uptime report of a node
 // @Accept  json
 // @Produce  json
-// @Param node_id query uint64 true "node id"
-// @Param uptime body db.Uptime false "uptime report"
-// @Success 200 {object} string
-// @Failure 400 {object} error
-// @Failure 404 {object} db.ErrRecordNotFound
+// @Param node_id path uint64 true "node id"
+// @Param request body UptimeReportRequest true "uptime report request"
+// @Success 201 {object} map[string]string "message: uptime reported successfully"
+// @Failure 400 {object} map[string]string "error: error message"
+// @Failure 404 {object} map[string]string "error: node not found"
 // @Router /nodes/{node_id}/uptime [post]
-func (s Server) uptimeHandler(c *gin.Context) {
-	nodeID := c.Param("node_id")
-
-	id, err := strconv.ParseUint(nodeID, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid node id"})
-		return
-	}
-
-	var report struct {
-		Uptime db.Uptime `json:"uptime"`
-	}
-
-	if err := c.ShouldBindJSON(&report); err != nil {
+func (s *Server) uptimeReportHandler(c *gin.Context) {
+	var req UptimeReportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = s.db.Uptime(id, report.Uptime)
+	// Get node and last report
+	_, err := s.db.GetNode(req.NodeID)
 	if err != nil {
-		status := http.StatusBadRequest
-
-		if errors.Is(err, db.ErrRecordNotFound) {
-			status = http.StatusNotFound
-		}
-
-		c.JSON(status, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": "node not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "uptime report received successfully",
-	})
+	// Detect restarts
+	// Validate report timing (40min ± 5min window)
+	// Maybe aggregate reports here and store total uptime?
+	// The total uptime should accumulate unless the node restarts, which is detected when the reported uptime is less than the previous value.
+
+	// Create report record
+	report := &db.UptimeReport{
+		NodeID:    req.NodeID,
+		Duration:  req.Uptime,
+		Timestamp: req.Timestamp,
+	}
+
+	err = s.db.CreateUptimeReport(report)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save report"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "uptime reported successfully"})
 }
 
 // @Summary consumption report

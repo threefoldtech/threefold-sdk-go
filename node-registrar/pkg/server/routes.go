@@ -27,7 +27,7 @@ func (s *Server) SetupRoutes() {
 	nodeRoutes.POST("/", s.registerNodeHandler)
 
 	nodeRoutes.Use(s.createAuthNodeMiddleware(s.network))
-	nodeRoutes.POST("/:node_id/uptime", s.uptimeHandler)
+	nodeRoutes.POST("/:node_id/uptime", s.uptimeReportHandler)
 	nodeRoutes.POST("/:node_id/consumption", s.storeConsumptionHandler)
 
 	// Account routes

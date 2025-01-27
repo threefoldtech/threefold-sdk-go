@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -63,20 +64,15 @@ func (db *Database) RegisterNode(node Node) (err error) {
 }
 
 // Uptime updates the uptime for a specific node
-func (db *Database) Uptime(nodeID uint64, report Uptime) (err error) {
-	var node Node
-	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return ErrRecordNotFound
-		}
-		return result.Error
-	}
+func (db *Database) GetUptimeReports(nodeID uint64, start, end time.Time) ([]UptimeReport, error) {
+	var reports []UptimeReport
+	result := db.gormDB.Where("node_id = ? AND timestamp BETWEEN ? AND ?",
+		nodeID, start, end).Order("timestamp asc").Find(&reports)
+	return reports, result.Error
+}
 
-	node.Uptime = report
-	if result := db.gormDB.Save(&node); result.Error != nil {
-		return result.Error
-	}
-	return nil
+func (db *Database) CreateUptimeReport(report *UptimeReport) error {
+	return db.gormDB.Create(report).Error
 }
 
 // Consumption updates the consumption report for a specific node
