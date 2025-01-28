@@ -77,6 +77,7 @@ func (db Database) autoMigrate() error {
 		&Farm{},
 		&Node{},
 		&UptimeReport{},
+		&ZosVersion{},
 	); err != nil {
 		return errors.Wrap(err, "failed to migrate tables")
 	}

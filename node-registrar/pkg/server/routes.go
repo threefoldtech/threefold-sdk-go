@@ -37,4 +37,12 @@ func (s *Server) SetupRoutes() {
 	// protected by farmer key
 	accountRoutes.Use(s.AuthMiddleware())
 	accountRoutes.PATCH("/:twin_id", s.updateAccountHandler)
+
+	// zOS Version endpoints
+	zosRoutes := v1.Group("/zos")
+	zosRoutes.GET("/version", s.getZOSVersionHandler)
+	// protected by admin key
+	zosRoutes.Use(s.AuthMiddleware())
+	zosRoutes.PUT("/version", s.setZOSVersionHandler)
+
 }

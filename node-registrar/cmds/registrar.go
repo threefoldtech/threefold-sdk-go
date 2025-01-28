@@ -19,11 +19,12 @@ import (
 
 type flags struct {
 	db.Config
-	debug      bool
-	version    bool
-	domain     string
-	serverPort uint
-	network    string
+	debug       bool
+	version     bool
+	domain      string
+	serverPort  uint
+	network     string
+	adminTwinID uint64
 }
 
 var (
@@ -55,6 +56,7 @@ func Run() error {
 	flag.UintVar(&f.serverPort, "server-port", 8080, "server port")
 	flag.StringVar(&f.domain, "domain", "", "domain on which the server will be served")
 	flag.StringVar(&f.network, "network", "dev", "the registrar network")
+	flag.Uint64Var(&f.adminTwinID, "admin-twin-id", 0, "admin twin ID")
 
 	flag.Parse()
 	f.SqlLogLevel = logger.LogLevel(sqlLogLevel)
@@ -86,7 +88,7 @@ func Run() error {
 		}
 	}()
 
-	s, err := server.NewServer(db, f.network)
+	s, err := server.NewServer(db, f.network, f.adminTwinID)
 	if err != nil {
 		return errors.Wrap(err, "failed to start gin server")
 	}

@@ -672,6 +672,48 @@ func (s *Server) getAccountHandler(c *gin.Context) {
 	}
 }
 
+type ZOSVersionRequest struct {
+	Version string `json:"version" binding:"required,base64"`
+}
+
+func (s *Server) setZOSVersionHandler(c *gin.Context) {
+	ensureOwner(c, s.adminTwinID)
+	if c.IsAborted() {
+		return
+	}
+
+	var req ZOSVersionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := s.db.SetZOSVersion(req.Version); err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "version already set" {
+			status = http.StatusConflict
+		}
+		c.AbortWithStatusJSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (s *Server) getZOSVersionHandler(c *gin.Context) {
+	version, err := s.db.GetZOSVersion()
+	if err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "zos version not set"})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"version": version})
+}
+
 // Helper function to validate public key format
 func isValidPublicKey(publicKeyBase64 string) bool {
 	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyBase64)

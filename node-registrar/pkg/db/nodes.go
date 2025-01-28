@@ -78,3 +78,28 @@ func (db *Database) GetUptimeReports(nodeID uint64, start, end time.Time) ([]Upt
 func (db *Database) CreateUptimeReport(report *UptimeReport) error {
 	return db.gormDB.Create(report).Error
 }
+
+func (db *Database) SetZOSVersion(version string) error {
+	var current ZosVersion
+	err := db.gormDB.FirstOrCreate(&current, ZosVersion{Key: "zos_4"}).Error
+	if err != nil {
+		return err
+	}
+
+	if current.Version == version {
+		return errors.New("version already set")
+	}
+
+	return db.gormDB.Model(&current).Update("version", version).Error
+}
+
+func (db *Database) GetZOSVersion() (string, error) {
+	var setting ZosVersion
+	if err := db.gormDB.Where("key = ?", "zos_4").First(&setting).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", ErrRecordNotFound
+		}
+		return "", err
+	}
+	return setting.Version, nil
+}

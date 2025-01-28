@@ -63,6 +63,12 @@ type UptimeReport struct {
 	WasRestart bool          // True if this report followed a restart
 	CreatedAt  time.Time
 }
+
+type ZosVersion struct {
+	Key     string `gorm:"primaryKey;size:50"`
+	Version string `gorm:"not null"`
+}
+
 type Interface struct {
 	Name string `json:"name"`
 	Mac  string `json:"mac"`
