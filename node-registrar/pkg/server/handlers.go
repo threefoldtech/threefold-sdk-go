@@ -110,7 +110,7 @@ func (s Server) createFarmHandler(c *gin.Context) {
 		return
 	}
 
-	err := s.db.CreateFarm(farm)
+	farmID, err := s.db.CreateFarm(farm)
 	if err != nil {
 		status := http.StatusBadRequest
 
@@ -124,7 +124,7 @@ func (s Server) createFarmHandler(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Farm created successfully",
-		"farm":    farm,
+		"farm_id": farmID,
 	})
 }
 
@@ -311,7 +311,7 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 		Approved:     false, // Default to unapproved awaiting farmer approval
 	}
 
-	err := s.db.RegisterNode(node)
+	nodeID, err := s.db.RegisterNode(node)
 	if err != nil {
 		status := http.StatusBadRequest
 
@@ -325,7 +325,7 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "node registered successfully",
-		"node":    node,
+		"node_id": nodeID,
 	})
 }
 

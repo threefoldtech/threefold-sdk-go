@@ -39,14 +39,14 @@ func (db *Database) GetFarm(farmID uint64) (farm Farm, err error) {
 	return
 }
 
-func (db *Database) CreateFarm(farm Farm) (err error) {
-	if err = db.gormDB.Create(&farm).Error; err != nil {
+func (db *Database) CreateFarm(farm Farm) (uint64, error) {
+	if err := db.gormDB.Create(&farm).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return ErrRecordAlreadyExists
+			return 0, ErrRecordAlreadyExists
 		}
 	}
 
-	return
+	return farm.FarmID, nil
 }
 
 func (db *Database) UpdateFarm(farmID uint64, name string) (err error) {

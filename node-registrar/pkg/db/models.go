@@ -37,7 +37,7 @@ type Node struct {
 	NodeID uint64 `json:"node_id" gorm:"primaryKey;autoIncrement"`
 	// Constraints set to prevents unintended account deletion if linked Farms/nodes exist.
 	FarmID uint64 `json:"farm_id" gorm:"not null;check:farm_id> 0;foreignKey:FarmID;references:FarmID;constraint:OnDelete:RESTRICT"`
-	TwinID uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0;foreignKey:TwinID;references:TwinID;constraint:OnDelete:RESTRICT"` // Node account reference
+	TwinID uint64 `json:"twin_id" gorm:"not null;unique;check:twin_id > 0;foreignKey:TwinID;references:TwinID;constraint:OnDelete:RESTRICT"` // Node account reference
 
 	Location Location `json:"location" gorm:"not null;type:json"`
 

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -89,6 +88,7 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 		if err != nil {
 			abortWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid stored public key: %v", err))
 			return
+			// Store verified twin ID in context, must be checked form the handlers to ensure altred resources belongs to same user
 		}
 
 		sig, err := base64.StdEncoding.DecodeString(signatureB64)
@@ -105,7 +105,6 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 
 		// Store verified twin ID in context, must be checked form the handlers to ensure altred resources belongs to same user
 		c.Set("twinID", twinID)
-		log.Println(twinID)
 		c.Next()
 	}
 }

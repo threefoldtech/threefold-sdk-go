@@ -43,21 +43,14 @@ func (db *Database) GetNode(nodeID uint64) (node Node, err error) {
 }
 
 // RegisterNode registers a new node in the database
-func (db *Database) RegisterNode(node Node) (err error) {
-	if result := db.gormDB.First(&node, node.NodeID); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return ErrRecordNotFound
-		}
-		return result.Error
-	}
-
+func (db *Database) RegisterNode(node Node) (uint64, error) {
 	if result := db.gormDB.Create(&node); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return ErrRecordAlreadyExists
+			return 0, ErrRecordAlreadyExists
 		}
-		return result.Error
+		return 0, result.Error
 	}
-	return nil
+	return node.NodeID, nil
 }
 
 // Uptime updates the uptime for a specific node
