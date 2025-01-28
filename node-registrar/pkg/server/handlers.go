@@ -618,23 +618,58 @@ func (s *Server) updateAccountHandler(c *gin.Context) {
 // @Failure 404 {object} gin.H "Account not found"
 // @Router /accounts/{twin_id} [get]
 func (s *Server) getAccountHandler(c *gin.Context) {
-	twinID, err := strconv.ParseUint(c.Param("twin_id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid twin ID"})
+	twinIDParam := c.Query("twin_id")
+	publicKeyParam := c.Query("public_key")
+
+	// Validate only one parameter is provided
+	if twinIDParam != "" && publicKeyParam != "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "provide either twin_id or public_key, not both",
+		})
 		return
 	}
 
-	account, err := s.db.GetAccount(twinID)
-	if err != nil {
-		if err == db.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+	if twinIDParam == "" && publicKeyParam == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "must provide either twin_id or public_key parameter",
+		})
+		return
+	}
+
+	if twinIDParam != "" {
+		twinID, err := strconv.ParseUint(twinIDParam, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid twin ID"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get account"})
+
+		account, err := s.db.GetAccount(twinID)
+		if err != nil {
+			if err == db.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get account"})
+			return
+		}
+
+		c.JSON(http.StatusOK, account)
 		return
 	}
 
-	c.JSON(http.StatusOK, account)
+	if publicKeyParam != "" {
+		account, err := s.db.GetAccountByPublicKey(publicKeyParam)
+		if err != nil {
+			if err == db.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get account"})
+			return
+		}
+		c.JSON(http.StatusOK, account)
+		return
+	}
 }
 
 // Helper function to validate public key format

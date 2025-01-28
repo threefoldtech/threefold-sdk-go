@@ -33,7 +33,7 @@ func (s *Server) SetupRoutes() {
 	// Account routes
 	accountRoutes := v1.Group("accounts")
 	accountRoutes.POST("/", s.createAccountHandler)
-	accountRoutes.GET("/:twin_id", s.getAccountHandler)
+	accountRoutes.GET("/", s.getAccountHandler)
 	// protected by farmer key
 	accountRoutes.Use(s.AuthMiddleware())
 	accountRoutes.PATCH("/:twin_id", s.updateAccountHandler)
