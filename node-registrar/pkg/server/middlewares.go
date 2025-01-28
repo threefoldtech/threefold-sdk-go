@@ -71,7 +71,6 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verify signature (supports both ED25519 and SR25519)
 		twinID, err := strconv.ParseUint(twinIDStr, 10, 64)
 		if err != nil {
 			abortWithError(c, http.StatusBadRequest, "Invalid twin ID format")
@@ -88,7 +87,6 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 		if err != nil {
 			abortWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid stored public key: %v", err))
 			return
-			// Store verified twin ID in context, must be checked form the handlers to ensure altred resources belongs to same user
 		}
 
 		sig, err := base64.StdEncoding.DecodeString(signatureB64)
@@ -97,7 +95,7 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verify using substrate address and challenge
+		// Verify signature (supports both ED25519 and SR25519)
 		if err := verifySignature(storedPK, challenge, sig); err != nil {
 			abortWithError(c, http.StatusUnauthorized, fmt.Sprintf("Signature verification failed: %v", err))
 			return
