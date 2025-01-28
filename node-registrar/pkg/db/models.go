@@ -23,13 +23,12 @@ type Account struct {
 }
 
 type Farm struct {
-	FarmID      uint64 `gorm:"primaryKey;autoIncrement" json:"farm_id"`
-	FarmName    string `gorm:"size:40;not null;unique;check:farm_name <> ''" json:"farm_name"`
-	TwinID      uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"` // Farmer account reference
-	Dedicated   bool   `json:"dedicated"`
-	FarmFreeIps uint64 `json:"farm_free_ips"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	FarmID    uint64 `gorm:"primaryKey;autoIncrement" json:"farm_id"`
+	FarmName  string `gorm:"size:40;not null;unique;check:farm_name <> ''" json:"farm_name"`
+	TwinID    uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"` // Farmer account reference
+	Dedicated bool   `json:"dedicated"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 
 	Nodes []Node `gorm:"foreignKey:FarmID;references:FarmID;constraint:OnDelete:RESTRICT" json:"nodes"`
 }
