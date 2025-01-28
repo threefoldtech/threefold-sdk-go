@@ -330,7 +330,6 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 }
 
 type UptimeReportRequest struct {
-	NodeID    uint64        `json:"node_id" binding:"required"`
 	Uptime    time.Duration `json:"uptime" binding:"required"`
 	Timestamp time.Time     `json:"timestamp" binding:"required"`
 }
@@ -347,6 +346,14 @@ type UptimeReportRequest struct {
 // @Failure 404 {object} gin.H "Node not found"
 // @Router /nodes/{node_id}/uptime [post]
 func (s *Server) uptimeReportHandler(c *gin.Context) {
+	nodeID := c.Param("node_id")
+
+	id, err := strconv.ParseUint(nodeID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid node id"})
+		return
+	}
+
 	var req UptimeReportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -354,7 +361,7 @@ func (s *Server) uptimeReportHandler(c *gin.Context) {
 	}
 
 	// Get node
-	node, err := s.db.GetNode(req.NodeID)
+	node, err := s.db.GetNode(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "node not found"})
 		return
@@ -371,7 +378,7 @@ func (s *Server) uptimeReportHandler(c *gin.Context) {
 
 	// Create report record
 	report := &db.UptimeReport{
-		NodeID:    req.NodeID,
+		NodeID:    id,
 		Duration:  req.Uptime,
 		Timestamp: req.Timestamp,
 	}
