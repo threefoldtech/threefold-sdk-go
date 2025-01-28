@@ -53,6 +53,20 @@ func (db *Database) RegisterNode(node Node) (uint64, error) {
 	return node.NodeID, nil
 }
 
+func (db *Database) UpdateNode(nodeID uint64, updates map[string]interface{}) error {
+	result := db.gormDB.Model(&Node{}).
+		Where("node_id = ?", nodeID).
+		Updates(updates)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+	return nil
+}
+
 // Uptime updates the uptime for a specific node
 func (db *Database) GetUptimeReports(nodeID uint64, start, end time.Time) ([]UptimeReport, error) {
 	var reports []UptimeReport

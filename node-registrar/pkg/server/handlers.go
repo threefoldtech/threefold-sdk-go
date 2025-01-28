@@ -329,6 +329,70 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 	})
 }
 
+type UpdateNodeRequest struct {
+	FarmID       uint64         `json:"farm_id" binding:"required,min=1"`
+	Resources    db.Resources   `json:"resources" binding:"required,min=1"`
+	Location     db.Location    `json:"location" binding:"required"`
+	Interfaces   []db.Interface `json:"interfaces" binding:"required,dive"`
+	SecureBoot   bool           `json:"secure_boot" binding:"required"`
+	Virtualized  bool           `json:"virtualized" binding:"required"`
+	SerialNumber string         `json:"serial_number" binding:"required"`
+}
+
+func (s *Server) updateNodeHandler(c *gin.Context) {
+	nodeID, err := strconv.ParseUint(c.Param("node_id"), 10, 64)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid node ID"})
+		return
+	}
+
+	existingNode, err := s.db.GetNode(nodeID)
+	if err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "node not found"})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	ensureOwner(c, existingNode.TwinID)
+	if c.IsAborted() {
+		return
+	}
+
+	var req UpdateNodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	// Prepare update fields
+	updates := map[string]interface{}{
+		"farm_id":       req.FarmID,
+		"resources":     req.Resources,
+		"location":      req.Location,
+		"interfaces":    req.Interfaces,
+		"secure_boot":   req.SecureBoot,
+		"virtualized":   req.Virtualized,
+		"serial_number": req.SerialNumber,
+	}
+	if req.FarmID != existingNode.FarmID {
+		updates["approved"] = false
+	}
+
+	if err := s.db.UpdateNode(nodeID, updates); err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "node not found"})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "failed to update node"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "node updated successfully"})
+}
+
 type UptimeReportRequest struct {
 	Uptime    time.Duration `json:"uptime" binding:"required"`
 	Timestamp time.Time     `json:"timestamp" binding:"required"`

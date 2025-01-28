@@ -27,6 +27,7 @@ func (s *Server) SetupRoutes() {
 	// protected by node key
 	nodeRoutes.Use(s.AuthMiddleware())
 	nodeRoutes.POST("/", s.registerNodeHandler)
+	nodeRoutes.PATCH("/:node_id", s.updateNodeHandler)
 	nodeRoutes.POST("/:node_id/uptime", s.uptimeReportHandler)
 
 	// Account routes
