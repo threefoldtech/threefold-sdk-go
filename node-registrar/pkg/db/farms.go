@@ -49,24 +49,15 @@ func (db *Database) CreateFarm(farm Farm) (err error) {
 	return
 }
 
-func (db *Database) UpdateFarm(farmID uint64, val Farm) (err error) {
-	var farm Farm
-	if result := db.gormDB.First(&farm, farmID); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return ErrRecordNotFound
-		}
+func (db *Database) UpdateFarm(farmID uint64, name string) (err error) {
+	result := db.gormDB.Model(&Farm{}).Where("farm_id = ?", farmID).Updates(map[string]interface{}{
+		"farm_name": name,
+	})
+	if result.Error != nil {
 		return result.Error
 	}
-
-	if val.FarmName != "" {
-		farm.FarmName = val.FarmName
+	if result.RowsAffected == 0 {
+		return ErrRecordNotFound
 	}
-
-	if val.FarmFreeIps != 0 {
-		farm.FarmFreeIps = val.FarmFreeIps
-	}
-
-	farm.Dedicated = val.Dedicated
-
-	return db.gormDB.Save(&farm).Error
+	return nil
 }

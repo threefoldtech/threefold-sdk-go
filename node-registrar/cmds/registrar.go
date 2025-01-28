@@ -95,6 +95,7 @@ func Run() error {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	log.Info().Msg("server is running on port :8080")
+
 	err = s.Run(quit, fmt.Sprintf("%s:%d", f.domain, f.serverPort))
 	if err != nil {
 		return errors.Wrap(err, "failed to run gin server")
@@ -104,7 +105,7 @@ func Run() error {
 }
 
 func (f flags) validate() error {
-	if f.serverPort < 1 && f.serverPort > 65535 {
+	if f.serverPort < 1 || f.serverPort > 65535 {
 		return errors.Errorf("invalid port %d, server port should be in the valid port range 1–65535", f.serverPort)
 	}
 
@@ -112,7 +113,7 @@ func (f flags) validate() error {
 		return errors.New("invalid domain name, domain name should not be empty")
 	}
 	if _, err := net.LookupHost(f.domain); err != nil {
-		return errors.Wrapf(err, "invalid domain %s", f.PostgresHost)
+		return errors.Wrapf(err, "invalid domain %s", f.domain)
 	}
 
 	return f.Config.Validate()

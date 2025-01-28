@@ -73,8 +73,10 @@ func openDatabase(c Config) (db Database, err error) {
 
 func (db Database) autoMigrate() error {
 	if err := db.gormDB.AutoMigrate(
+		&Account{},
 		&Farm{},
 		&Node{},
+		&UptimeReport{},
 	); err != nil {
 		return errors.Wrap(err, "failed to migrate tables")
 	}

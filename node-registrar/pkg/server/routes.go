@@ -15,25 +15,25 @@ func (s *Server) SetupRoutes() {
 	farmRoutes := v1.Group("farms")
 	farmRoutes.GET("/", s.listFarmsHandler)
 	farmRoutes.GET("/:farm_id", s.getFarmHandler)
+	// protected by farmer key
+	farmRoutes.Use(s.AuthMiddleware())
 	farmRoutes.POST("/", s.createFarmHandler)
-
-	farmRoutes.Use(s.createAuthFarmMiddleware(s.network))
 	farmRoutes.PATCH("/:farm_id", s.updateFarmsHandler)
 
 	// nodes routes
 	nodeRoutes := v1.Group("nodes")
 	nodeRoutes.GET("/", s.listNodesHandler)
 	nodeRoutes.GET("/:node_id", s.getNodeHandler)
+	// protected by node key
+	nodeRoutes.Use(s.AuthMiddleware())
 	nodeRoutes.POST("/", s.registerNodeHandler)
-
-	nodeRoutes.Use(s.createAuthNodeMiddleware(s.network))
 	nodeRoutes.POST("/:node_id/uptime", s.uptimeReportHandler)
-	nodeRoutes.POST("/:node_id/consumption", s.storeConsumptionHandler)
 
 	// Account routes
 	accountRoutes := v1.Group("accounts")
 	accountRoutes.POST("/", s.createAccountHandler)
 	accountRoutes.GET("/:twin_id", s.getAccountHandler)
+	// protected by farmer key
+	accountRoutes.Use(s.AuthMiddleware())
 	accountRoutes.PATCH("/:twin_id", s.updateAccountHandler)
-
 }

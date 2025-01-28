@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ func (db *Database) CreateAccount(account *Account) error {
 }
 
 // UpdateAccount updates an account's relays and RMB encryption key
-func (db *Database) UpdateAccount(twinID uint64, relays []string, rmbEncKey string) error {
+func (db *Database) UpdateAccount(twinID uint64, relays pq.StringArray, rmbEncKey string) error {
 	result := db.gormDB.Model(&Account{}).Where("twin_id = ?", twinID).Updates(map[string]interface{}{
 		"relays":      relays,
 		"rmb_enc_key": rmbEncKey,

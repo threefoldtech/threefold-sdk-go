@@ -20,9 +20,6 @@ func (db *Database) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err
 	if filter.TwinID != nil {
 		query = query.Where("twin_id = ?", *filter.TwinID)
 	}
-	if filter.Status != "" {
-		query = query.Where("status = ?", filter.Status)
-	}
 
 	offset := (limit.Page - 1) * limit.Size
 	query = query.Offset(int(offset)).Limit(int(limit.Size))
@@ -73,22 +70,4 @@ func (db *Database) GetUptimeReports(nodeID uint64, start, end time.Time) ([]Upt
 
 func (db *Database) CreateUptimeReport(report *UptimeReport) error {
 	return db.gormDB.Create(report).Error
-}
-
-// Consumption updates the consumption report for a specific node
-func (db *Database) Consumption(nodeID uint64, report Consumption) (err error) {
-	var node Node
-
-	if err := db.gormDB.First(&node, nodeID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrRecordNotFound
-		}
-		return err
-	}
-
-	node.Consumption = report
-	if result := db.gormDB.Save(&node); result.Error != nil {
-		return result.Error
-	}
-	return nil
 }

@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"time"
 
-	substrate "github.com/threefoldtech/tfchain/clients/tfchain-client-go"
+	"github.com/lib/pq"
 )
 
 type Account struct {
-	TwinID    uint64   `gorm:"primaryKey;autoIncrement"`
-	Relays    []string `gorm:"type:text[];default:'{}'" json:"relays"` // Optional list of relay domains
-	RMBEncKey string   `gorm:"type:text" json:"rmb_enc_key"`           // Optional base64 encoded public key for rmb communication
+	TwinID    uint64         `gorm:"primaryKey;autoIncrement"`
+	Relays    pq.StringArray `gorm:"type:text[];default:'{}'" json:"relays"` // Optional list of relay domains
+	RMBEncKey string         `gorm:"type:text" json:"rmb_enc_key"`           // Optional base64 encoded public key for rmb communication
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	// The public key (ED25519 for nodes, ED25519 or SR25519 for farmers) in the more standard base64 since we are moving from substarte echo system?
+	// The public key (ED25519 for nodes, ED25519 or SR25519 for farmers) in the more standard base64 since we are moving from substrate echo system?
 	// (still SS58 can be used or plain base58 ,TBD)
 	PublicKey string `gorm:"type:text;not null;unique"`
 	// Relations | likely we need to use OnDelete:RESTRICT (Prevent Twin deletion if farms exist)
@@ -25,7 +25,7 @@ type Account struct {
 type Farm struct {
 	FarmID      uint64 `gorm:"primaryKey;autoIncrement" json:"farm_id"`
 	FarmName    string `gorm:"size:40;not null;unique;check:farm_name <> ''" json:"farm_name"`
-	TwinID      uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"` // Farmer account refrence
+	TwinID      uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0"` // Farmer account reference
 	Dedicated   bool   `json:"dedicated"`
 	FarmFreeIps uint64 `json:"farm_free_ips"`
 	CreatedAt   time.Time
@@ -36,33 +36,25 @@ type Farm struct {
 
 type Node struct {
 	NodeID uint64 `json:"node_id" gorm:"primaryKey;autoIncrement"`
-	// Constrainets set to prevents unintended account deletion if linked Farms/nodes exist.
+	// Constraints set to prevents unintended account deletion if linked Farms/nodes exist.
 	FarmID uint64 `json:"farm_id" gorm:"not null;check:farm_id> 0;foreignKey:FarmID;references:FarmID;constraint:OnDelete:RESTRICT"`
 	TwinID uint64 `json:"twin_id" gorm:"not null;check:twin_id > 0;foreignKey:TwinID;references:TwinID;constraint:OnDelete:RESTRICT"` // Node account reference
-
-	ZosVersion string `json:"zos_version" gorm:"not null"`
-	NodeType   string `json:"node_type" gorm:"not null"`
 
 	Location Location `json:"location" gorm:"not null;type:json"`
 
 	// PublicConfig PublicConfig `json:"public_config" gorm:"type:json"`
-	Resources    Resources `json:"resources" gorm:"not null;type:json"`
-	Interface    Interface `json:"interface" gorm:"not null;type:json"`
+	Resources    Resources   `json:"resources" gorm:"not null;type:json"`
+	Interfaces   []Interface `json:"interface" gorm:"not null;type:json"`
 	SecureBoot   bool
 	Virtualized  bool
 	SerialNumber string
 
 	UptimeReports []UptimeReport `json:"uptime" gorm:"foreignKey:NodeID;references:NodeID;constraint:OnDelete:CASCADE"`
-	Consumption   Consumption    `json:"consumption" gorm:"type:jsonb;serializer:json"`
-
-	PriceUsd float64 `json:"price_usd"`
-	Status   string  `json:"status"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Approved  bool
 }
-
-type Consumption []substrate.NruConsumption
 
 type UptimeReport struct {
 	ID         uint64        `gorm:"primaryKey;autoIncrement"`

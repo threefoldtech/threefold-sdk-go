@@ -1,10 +1,7 @@
 package server
 
 import (
-	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,21 +9,28 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/db"
 )
 
-// @Summary list farms
-// @Description list farms with specific filter
-// @Accept  json
-// @Produce  json
-// @Param farm_name query string false "farm name"
-// @Param farm_id query uint64 false "farm id"
-// @Param twin_id query uint64 false "twin id"
-// @Param page query int false "Page number"
-// @Param size query int false "Max result per page"
-// @Success 200 {object} []db.Farm
-// @Failure 400 {object} error
-// @Router /farms/ [get]
+const (
+	PubKeySize        = 32
+	MaxTimestampDelta = 2 * time.Second
+)
+
+// @Summary List farms
+// @Description Get a list of farms with optional filters
+// @Tags farms
+// @Accept json
+// @Produce json
+// @Param farm_name query string false "Filter by farm name"
+// @Param farm_id query int false "Filter by farm ID"
+// @Param twin_id query int false "Filter by twin ID"
+// @Param page query int false "Page number" default(1)
+// @Param size query int false "Results per page" default(10)
+// @Success 200 {object} gin.H "List of farms"
+// @Failure 400 {object} gin.H "Bad request"
+// @Router /farms [get]
 func (s Server) listFarmsHandler(c *gin.Context) {
 	var filter db.FarmFilter
 	limit := db.DefaultLimit()
@@ -48,15 +52,16 @@ func (s Server) listFarmsHandler(c *gin.Context) {
 	})
 }
 
-// @Summary get farm
-// @Description get a farm with specific id
-// @Accept  json
-// @Produce  json
-// @param farm_id path uint64 true "farm id"
-// @Success 200 {object} db.Farm
-// @Failure 404 {object} db.ErrRecordNotFound
-// @Failure 400 {object} error
-// @Router /farm/{farm_id} [get]
+// @Summary Get farm details
+// @Description Get details for a specific farm
+// @Tags farms
+// @Accept json
+// @Produce json
+// @Param farm_id path int true "Farm ID"
+// @Success 200 {object} gin.H "Farm details"
+// @Failure 400 {object} gin.H "Invalid farm ID"
+// @Failure 404 {object} gin.H "Farm not found"
+// @Router /farms/{farm_id} [get]
 func (s Server) getFarmHandler(c *gin.Context) {
 	farmID := c.Param("farm_id")
 
@@ -82,24 +87,26 @@ func (s Server) getFarmHandler(c *gin.Context) {
 	})
 }
 
-// @Summary create a farm
-// @Description creates a farm
-// @Accept  json
-// @Produce  json
-// @Param farm_id body uint64 true "farm id"
-// @Param farm_name body uint64 true "farm name"
-// @Param twin_id body uint64 true "twin id"
-// @Param dedicated body bool false "dedicated farm"
-// @Param farm_free_ips body uint64 false "farm free ips"
-// @Success 200 {object} db.Farm
-// @Failure 400 {object} error
-// @Failure 409 {object} db.ErrRecordAlreadyExists
-// @Router /farms/ [post]
+// @Summary Create new farm
+// @Description Create a new farm entry
+// @Tags farms
+// @Accept json
+// @Produce json
+// @Param farm body db.Farm true "Farm creation data"
+// @Success 201 {object} gin.H "Farm created successfully"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 409 {object} gin.H "Farm already exists"
+// @Router /farms [post]
 func (s Server) createFarmHandler(c *gin.Context) {
 	var farm db.Farm
 
 	if err := c.ShouldBindJSON(&farm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("failed to parse farm info: %v", err.Error())})
+		return
+	}
+
+	ensureOwner(c, farm.TwinID)
+	if c.IsAborted() {
 		return
 	}
 
@@ -121,21 +128,23 @@ func (s Server) createFarmHandler(c *gin.Context) {
 	})
 }
 
-// @Summary update a farm
-// @Description update a farm
-// @Accept  json
-// @Produce  json
-// @Param farm_id body uint64 true "farm id"
-// @Param farm_name body uint64 false "farm name"
-// @Param twin_id body uint64 false "twin id"
-// @Param dedicated body bool false "dedicated farm"
-// @Param farm_free_ips body uint64 false "farm free ips"
-// @Success 200 {object} db.Farm
-// @Failure 400 {object} error
-// @Failure 404 {object} db.ErrRecordNotFound
-// @Router /farms/ [patch]
+type UpdateFarmRequest struct {
+	FarmName string `json:"farm_name" binding:"required,min=1,max=40"`
+}
+
+// @Summary Update farm
+// @Description Update existing farm details
+// @Tags farms
+// @Accept json
+// @Produce json
+// @Param farm_id path int true "Farm ID"
+// @Param request body UpdateFarmRequest true "Farm update data"
+// @Success 200 {object} gin.H "Farm updated successfully"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 404 {object} gin.H "Farm not found"
+// @Router /farms/{farm_id} [patch]
 func (s Server) updateFarmsHandler(c *gin.Context) {
-	var farm db.Farm
+	var req UpdateFarmRequest
 	farmID := c.Param("farm_id")
 
 	id, err := strconv.ParseUint(farmID, 10, 64)
@@ -144,26 +153,39 @@ func (s Server) updateFarmsHandler(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&farm); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("failed to parse farm info: %v", err.Error())})
 		return
 	}
 
-	if farm.FarmID != 0 && farm.FarmID != id {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "farm id does not match farm id in the request"})
+	existingFarm, err := s.db.GetFarm(id)
+	if err != nil {
+		if errors.Is(err, db.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Farm not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
 
-	err = s.db.UpdateFarm(id, farm)
-	if err != nil {
-		status := http.StatusBadRequest
-
-		if errors.Is(err, db.ErrRecordNotFound) {
-			status = http.StatusNotFound
-		}
-
-		c.JSON(status, gin.H{"error": err.Error()})
+	ensureOwner(c, existingFarm.TwinID)
+	if c.IsAborted() {
 		return
+	}
+
+	// No need to hit DB if new farm name is same as the old one
+	if existingFarm.FarmName != req.FarmName {
+		err = s.db.UpdateFarm(id, req.FarmName)
+		if err != nil {
+			status := http.StatusBadRequest
+
+			if errors.Is(err, db.ErrRecordNotFound) {
+				status = http.StatusNotFound
+			}
+
+			c.JSON(status, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -171,20 +193,21 @@ func (s Server) updateFarmsHandler(c *gin.Context) {
 	})
 }
 
-// @Summary list nodes
-// @Description list nodes with specific filter
-// @Accept  json
-// @Produce  json
-// @Param node_id query uint64 false "node id"
-// @Param farm_id query uint64 false "farm id"
-// @Param twin_id query uint64 false "twin id"
-// @Param status query string false "node status"
-// @Param healthy query bool false "is node healthy"
-// @Param page query int false "Page number"
-// @Param size query int false "Max result per page"
-// @Success 200 {object} []db.Node
-// @Failure 400 {object} error
-// @Router /nodes/ [get]
+// @Summary List nodes
+// @Description Get a list of nodes with optional filters
+// @Tags nodes
+// @Accept json
+// @Produce json
+// @Param node_id query int false "Filter by node ID"
+// @Param farm_id query int false "Filter by farm ID"
+// @Param twin_id query int false "Filter by twin ID"
+// @Param status query string false "Filter by status"
+// @Param healthy query bool false "Filter by health status"
+// @Param page query int false "Page number" default(1)
+// @Param size query int false "Results per page" default(10)
+// @Success 200 {object} gin.H "List of nodes"
+// @Failure 400 {object} gin.H "Bad request"
+// @Router /nodes [get]
 func (s Server) listNodesHandler(c *gin.Context) {
 	var filter db.NodeFilter
 	limit := db.DefaultLimit()
@@ -207,14 +230,15 @@ func (s Server) listNodesHandler(c *gin.Context) {
 	})
 }
 
-// @Summary get node
-// @Description get a node with specific id
-// @Accept  json
-// @Produce  json
-// @param node_id path uint64 false "node id"
-// @Success 200 {object} db.Node
-// @Failure 404 {object} db.ErrRecordNotFound
-// @Failure 400 {object} error
+// @Summary Get node details
+// @Description Get details for a specific node
+// @Tags nodes
+// @Accept json
+// @Produce json
+// @Param node_id path int true "Node ID"
+// @Success 200 {object} gin.H "Node details"
+// @Failure 400 {object} gin.H "Invalid node ID"
+// @Failure 404 {object} gin.H "Node not found"
 // @Router /nodes/{node_id} [get]
 func (s Server) getNodeHandler(c *gin.Context) {
 	nodeID := c.Param("node_id")
@@ -241,32 +265,50 @@ func (s Server) getNodeHandler(c *gin.Context) {
 	})
 }
 
-// @Summary register a node
-// @Description register a node
-// @Accept  json
-// @Produce  json
-// @Param node_id body uint64 true "node id"
-// @Param farm_id body uint64 true "farm id"
-// @Param twin_id body uint64 true "twin id"
-// @Param features body []string true "node features "
-// @Param status body string false "node status"
-// @Param healthy body bool false "node healthy"
-// @Param dedicated body bool false "node dedicated"
-// @Param rented body bool false "node rented"
-// @Param rentable body bool false "node rentable"
-// @Param price_usd body float64 false "price in usd"
-// @Param uptime body db.Uptime false "uptime report"
-// @Param consumption body db.Consumption false "consumption report"
-// @Success 200 {object} db.Node
-// @Failure 400 {object} error
-// @Failure 409 {object} db.ErrRecordAlreadyExists
-// @Router /nodes/ [post]
-func (s Server) registerNodeHandler(c *gin.Context) {
-	var node db.Node
+type NodeRegistrationRequest struct {
+	TwinID       uint64         `json:"twin_id" binding:"required,min=1"`
+	FarmID       uint64         `json:"farm_id" binding:"required,min=1"`
+	Resources    db.Resources   `json:"resources" binding:"required"`
+	Location     db.Location    `json:"location" binding:"required"`
+	Interfaces   []db.Interface `json:"interfaces" binding:"required,min=1,dive"`
+	SecureBoot   bool           `json:"secure_boot"`
+	Virtualized  bool           `json:"virtualized"`
+	SerialNumber string         `json:"serial_number" binding:"required"`
+}
 
-	if err := c.ShouldBindJSON(&node); err != nil {
+// @Summary Register new node
+// @Description Register a new node in the system
+// @Tags nodes
+// @Accept json
+// @Produce json
+// @Param request body NodeRegistrationRequest true "Node registration data"
+// @Success 201 {object} gin.H "Node registered successfully"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 409 {object} gin.H "Node already exists"
+// @Router /nodes [post]
+func (s Server) registerNodeHandler(c *gin.Context) {
+	var req NodeRegistrationRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	ensureOwner(c, req.TwinID)
+	if c.IsAborted() {
+		return
+	}
+
+	node := db.Node{
+		TwinID:       req.TwinID,
+		FarmID:       req.FarmID,
+		Resources:    req.Resources,
+		Location:     req.Location,
+		Interfaces:   req.Interfaces,
+		SecureBoot:   req.SecureBoot,
+		Virtualized:  req.Virtualized,
+		SerialNumber: req.SerialNumber,
+		Approved:     false, // Default to unapproved awaiting farmer approval
 	}
 
 	err := s.db.RegisterNode(node)
@@ -293,15 +335,16 @@ type UptimeReportRequest struct {
 	Timestamp time.Time     `json:"timestamp" binding:"required"`
 }
 
-// @Summary uptime report
-// @Description save uptime report of a node
-// @Accept  json
-// @Produce  json
-// @Param node_id path uint64 true "node id"
-// @Param request body UptimeReportRequest true "uptime report request"
-// @Success 201 {object} map[string]string "message: uptime reported successfully"
-// @Failure 400 {object} map[string]string "error: error message"
-// @Failure 404 {object} map[string]string "error: node not found"
+// @Summary Report node uptime
+// @Description Submit uptime report for a node
+// @Tags nodes
+// @Accept json
+// @Produce json
+// @Param node_id path int true "Node ID"
+// @Param request body UptimeReportRequest true "Uptime report data"
+// @Success 201 {object} gin.H "Uptime reported successfully"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 404 {object} gin.H "Node not found"
 // @Router /nodes/{node_id}/uptime [post]
 func (s *Server) uptimeReportHandler(c *gin.Context) {
 	var req UptimeReportRequest
@@ -310,13 +353,17 @@ func (s *Server) uptimeReportHandler(c *gin.Context) {
 		return
 	}
 
-	// Get node and last report
-	_, err := s.db.GetNode(req.NodeID)
+	// Get node
+	node, err := s.db.GetNode(req.NodeID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "node not found"})
 		return
 	}
 
+	ensureOwner(c, node.TwinID)
+	if c.IsAborted() {
+		return
+	}
 	// Detect restarts
 	// Validate report timing (40min ± 5min window)
 	// Maybe aggregate reports here and store total uptime?
@@ -338,49 +385,6 @@ func (s *Server) uptimeReportHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "uptime reported successfully"})
 }
 
-// @Summary consumption report
-// @Description save consumption report of a node
-// @Accept  json
-// @Produce  json
-// @Param node_id query uint64 true "node id"
-// @Param consumption body db.Consumption false "consumption report"
-// @Success 200 {object} string
-// @Failure 400 {object} error
-// @Failure 404 {object} db.ErrRecordNotFound
-// @Router /nodes/{node_id}/uptime [post]
-func (s Server) storeConsumptionHandler(c *gin.Context) {
-	nodeID := c.Param("node_id")
-
-	id, err := strconv.ParseUint(nodeID, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid node id"})
-		return
-	}
-
-	var consumption db.Consumption
-
-	if err := c.ShouldBindJSON(&consumption); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = s.db.Consumption(id, consumption)
-	if err != nil {
-		status := http.StatusBadRequest
-
-		if errors.Is(err, db.ErrRecordNotFound) {
-			status = http.StatusNotFound
-		}
-
-		c.JSON(status, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "consumption report received successfully",
-	})
-}
-
 func parseQueryParams(c *gin.Context, types_ ...interface{}) error {
 	for _, type_ := range types_ {
 		if err := c.ShouldBindQuery(type_); err != nil {
@@ -392,40 +396,25 @@ func parseQueryParams(c *gin.Context, types_ ...interface{}) error {
 
 // AccountRequest represents the request body for account operations
 type AccountCreationRequest struct {
-	PublicKey string   `json:"public_key" binding:"required"`
+	Timestamp int64  `json:"timestamp" binding:"required"`
+	PublicKey string `json:"public_key" binding:"required"` // base64 encoded
+	// the registrar expect a signature of a message with format `timestampStr:publicKeyBase64`
+	// - signature format: base64(ed25519_or_sr22519_signature)
 	Signature string   `json:"signature" binding:"required"`
-	Timestamp int64    `json:"timestamp" binding:"required"`
 	Relays    []string `json:"relays,omitempty"`
 	RMBEncKey string   `json:"rmb_enc_key,omitempty"`
 }
 
-const (
-	MaxTimestampDelta = 2 * time.Second
-)
-
-// Challenge is uniquely tied to both the timestamp and public key
-// Prevents replay attacks across different accounts, still no state management required
-// createChallenge creates a deterministic challenge from timestamp and public key
-func createChallenge(timestamp int64, publicKey string) string {
-	// Create a unique message combining action, timestamp, and public key
-	message := fmt.Sprintf("create_account:%d:%s", timestamp, publicKey)
-
-	// Hash the message
-	hash := sha256.Sum256([]byte(message))
-	return hex.EncodeToString(hash[:])
-}
-
-// @Summary creates a new account/twin
-// @Description creates a new account after verifying key ownership
-// @Accept  json
-// @Produce  json
-// @Param public_key body string true "base64 encoded public key"
-// @Param signature body string true "base64 encoded signature"
-// @Param timestamp body uint64 true "timestamp"
-// @Success 201 {object} db.Account
-// @Failure 400 {object} error
-// @Failure 409 {object} db.ErrRecordAlreadyExists
-// @Router /accounts/ [post]
+// @Summary Create new account
+// @Description Create a new twin account with cryptographic verification
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param request body AccountCreationRequest true "Account creation data"
+// @Success 201 {object} db.Account "Created account details"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 409 {object} gin.H "Account already exists"
+// @Router /accounts [post]
 func (s *Server) createAccountHandler(c *gin.Context) {
 	var req AccountCreationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -453,17 +442,24 @@ func (s *Server) createAccountHandler(c *gin.Context) {
 	}
 
 	// Create challenge using timestamp and public key
-	challenge := createChallenge(req.Timestamp, req.PublicKey)
+	// Challenge is uniquely tied to both the timestamp and public key
+	// Prevents replay attacks, still no state management required
+	challenge := []byte(fmt.Sprintf("%d:%s", req.Timestamp, req.PublicKey))
 
-	// Verify signature of the challenge
-	valid, err := verifySignature(req.PublicKey, challenge, req.Signature)
+	// Decode public key from base64
+	publicKeyBytes, err := base64.StdEncoding.DecodeString(req.PublicKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("signature verification error: %v", err)})
-		return
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid public key format"})
 	}
-
-	if !valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid signature"})
+	// Decode signature from base64
+	signatureBytes, err := base64.StdEncoding.DecodeString(req.Signature)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid signature format: %v", err)})
+	}
+	// Verify signature of the challenge
+	err = verifySignature(publicKeyBytes, challenge, signatureBytes)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("signature verification error: %v", err)})
 		return
 	}
 
@@ -484,9 +480,16 @@ func (s *Server) createAccountHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, account)
 }
 
+/* // verifySignature verifies an ED25519 signature
+func verifySignature(publicKey, chalange, signature []byte) (bool, error) {
+
+	// Verify the signature
+	return ed25519.Verify(publicKey, chalange, signature), nil
+} */
+
 type UpdateAccountRequest struct {
-	Relays    []string `json:"relays"`
-	RMBEncKey string   `json:"rmb_enc_key"`
+	Relays    pq.StringArray `json:"relays"`
+	RMBEncKey string         `json:"rmb_enc_key"`
 }
 
 // updateAccountHandler updates an account's relays and RMB encryption key
@@ -504,23 +507,28 @@ type UpdateAccountRequest struct {
 func (s *Server) updateAccountHandler(c *gin.Context) {
 	twinID, err := strconv.ParseUint(c.Param("twin_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid twin ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid twin ID"})
+		return
+	}
+
+	ensureOwner(c, twinID)
+	if c.IsAborted() {
 		return
 	}
 
 	var req UpdateAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
 	err = s.db.UpdateAccount(twinID, req.Relays, req.RMBEncKey)
 	if err != nil {
 		if errors.Is(err, db.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "account not found"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update account"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "failed to update account"})
 		return
 	}
 
@@ -558,35 +566,34 @@ func (s *Server) getAccountHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
-// verifySignature verifies an ED25519 signature
-func verifySignature(publicKeyBase64, message, signatureBase64 string) (bool, error) {
-	// Decode public key from base64
-	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyBase64)
-	if err != nil {
-		return false, fmt.Errorf("invalid public key format: %w", err)
-	}
-
-	// Verify public key length
-	if len(publicKeyBytes) != ed25519.PublicKeySize {
-		return false, fmt.Errorf("invalid public key size: expected %d, got %d",
-			ed25519.PublicKeySize, len(publicKeyBytes))
-	}
-
-	// Decode signature from base64
-	signatureBytes, err := base64.StdEncoding.DecodeString(signatureBase64)
-	if err != nil {
-		return false, fmt.Errorf("invalid signature format: %w", err)
-	}
-
-	// Verify the signature
-	return ed25519.Verify(publicKeyBytes, []byte(message), signatureBytes), nil
-}
-
 // Helper function to validate public key format
 func isValidPublicKey(publicKeyBase64 string) bool {
 	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyBase64)
 	if err != nil {
 		return false
 	}
-	return len(publicKeyBytes) == ed25519.PublicKeySize
+	return len(publicKeyBytes) == PubKeySize
+}
+
+// Helper function to ensure the request is from the owner
+func ensureOwner(c *gin.Context, twinID uint64) {
+	// Retrieve twinID set by the authMiddleware
+	authTwinID, exists := c.Get("twinID")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
+		return
+	}
+
+	// Safe type assertion
+	authID, ok := authTwinID.(uint64)
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authentication type"})
+		return
+	}
+
+	// Ensure that the retrieved twinID equals to the passed twinID
+	if authID != twinID || twinID == 0 {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "not authorized"})
+		return
+	}
 }
