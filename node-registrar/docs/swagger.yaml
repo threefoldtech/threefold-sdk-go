@@ -1,3 +1,4 @@
+basePath: /v1
 definitions:
   db.Account:
     properties:
@@ -211,6 +212,34 @@ definitions:
     required:
     - farm_name
     type: object
+  server.UpdateNodeRequest:
+    properties:
+      farm_id:
+        minimum: 1
+        type: integer
+      interfaces:
+        items:
+          $ref: '#/definitions/db.Interface'
+        type: array
+      location:
+        $ref: '#/definitions/db.Location'
+      resources:
+        $ref: '#/definitions/db.Resources'
+      secure_boot:
+        type: boolean
+      serial_number:
+        type: string
+      virtualized:
+        type: boolean
+    required:
+    - farm_id
+    - interfaces
+    - location
+    - resources
+    - secure_boot
+    - serial_number
+    - virtualized
+    type: object
   server.UptimeReportRequest:
     properties:
       timestamp:
@@ -230,14 +259,6 @@ definitions:
     type: object
   time.Duration:
     enum:
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
     - 1
     - 1000
     - 1000000
@@ -245,14 +266,6 @@ definitions:
     - 60000000000
     type: integer
     x-enum-varnames:
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -260,6 +273,9 @@ definitions:
     - Minute
 info:
   contact: {}
+  description: API for managing TFGrid node registration
+  title: Node Registrar API
+  version: "1.0"
 paths:
   /accounts:
     get:
@@ -328,6 +344,11 @@ paths:
       - application/json
       description: Updates an account's relays and RMB encryption key
       parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: Twin ID of the account
         in: path
         name: twin_id
@@ -404,6 +425,11 @@ paths:
       - application/json
       description: Create a new farm entry
       parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: Farm creation data
         in: body
         name: farm
@@ -462,6 +488,11 @@ paths:
       - application/json
       description: Update existing farm details
       parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: Farm ID
         in: path
         name: farm_id
@@ -546,6 +577,11 @@ paths:
       - application/json
       description: Register a new node in the system
       parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: Node registration data
         in: body
         name: request
@@ -599,12 +635,56 @@ paths:
       summary: Get node details
       tags:
       - nodes
+    patch:
+      consumes:
+      - application/json
+      description: Update existing node details
+      parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Node ID
+        in: path
+        name: node_id
+        required: true
+        type: integer
+      - description: Node update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/server.UpdateNodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Node updated successfully
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Node not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Update node
+      tags:
+      - nodes
   /nodes/{node_id}/uptime:
     post:
       consumes:
       - application/json
       description: Submit uptime report for a node
       parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: Node ID
         in: path
         name: node_id
@@ -660,6 +740,11 @@ paths:
       - application/json
       description: Sets the ZOS version
       parameters:
+      - description: 'Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)'
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: Update ZOS Version Request
         in: body
         name: body

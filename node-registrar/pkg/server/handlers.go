@@ -18,6 +18,11 @@ const (
 	MaxTimestampDelta = 2 * time.Second
 )
 
+// @title Node Registrar API
+// @version 1.0
+// @description API for managing TFGrid node registration
+// @BasePath /v1
+
 // @Summary List farms
 // @Description Get a list of farms with optional filters
 // @Tags farms
@@ -90,6 +95,7 @@ func (s Server) getFarmHandler(c *gin.Context) {
 // @Summary Create new farm
 // @Description Create a new farm entry
 // @Tags farms
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
 // @Param farm body db.Farm true "Farm creation data"
@@ -135,6 +141,7 @@ type UpdateFarmRequest struct {
 // @Summary Update farm
 // @Description Update existing farm details
 // @Tags farms
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
 // @Param farm_id path int true "Farm ID"
@@ -279,6 +286,7 @@ type NodeRegistrationRequest struct {
 // @Summary Register new node
 // @Description Register a new node in the system
 // @Tags nodes
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
 // @Param request body NodeRegistrationRequest true "Node registration data"
@@ -339,6 +347,18 @@ type UpdateNodeRequest struct {
 	SerialNumber string         `json:"serial_number" binding:"required"`
 }
 
+// @Summary Update node
+// @Description Update existing node details
+// @Tags nodes
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
+// @Accept json
+// @Produce json
+// @Param node_id path int true "Node ID"
+// @Param request body UpdateNodeRequest true "Node update data"
+// @Success 200 {object} gin.H "Node updated successfully"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Failure 404 {object} gin.H "Node not found"
+// @Router /nodes/{node_id} [patch]
 func (s *Server) updateNodeHandler(c *gin.Context) {
 	nodeID, err := strconv.ParseUint(c.Param("node_id"), 10, 64)
 	if err != nil {
@@ -401,6 +421,7 @@ type UptimeReportRequest struct {
 // @Summary Report node uptime
 // @Description Submit uptime report for a node
 // @Tags nodes
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
 // @Param node_id path int true "Node ID"
@@ -567,6 +588,7 @@ type UpdateAccountRequest struct {
 // @Summary Update account details
 // @Description Updates an account's relays and RMB encryption key
 // @Tags accounts
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
 // @Param twin_id path uint64 true "Twin ID of the account"
@@ -680,6 +702,7 @@ type ZOSVersionRequest struct {
 // @Summary Set ZOS Version
 // @Description Sets the ZOS version
 // @Tags ZOS
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
 // @Param body body ZOSVersionRequest true "Update ZOS Version Request"

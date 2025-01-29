@@ -123,6 +123,13 @@ const docTemplate = `{
                 "summary": "Update account details",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "type": "integer",
                         "description": "Twin ID of the account",
                         "name": "twin_id",
@@ -237,6 +244,13 @@ const docTemplate = `{
                 "summary": "Create new farm",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Farm creation data",
                         "name": "farm",
                         "in": "body",
@@ -324,6 +338,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update farm",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Farm ID",
@@ -451,6 +472,13 @@ const docTemplate = `{
                 "summary": "Register new node",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Node registration data",
                         "name": "request",
                         "in": "body",
@@ -524,6 +552,64 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "description": "Update existing node details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "nodes"
+                ],
+                "summary": "Update node",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Node ID",
+                        "name": "node_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Node update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.UpdateNodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Node updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "404": {
+                        "description": "Node not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
             }
         },
         "/nodes/{node_id}/uptime": {
@@ -540,6 +626,13 @@ const docTemplate = `{
                 ],
                 "summary": "Report node uptime",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Node ID",
@@ -623,6 +716,13 @@ const docTemplate = `{
                 ],
                 "summary": "Set ZOS Version",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication format: Base64(\u003cunix_timestamp\u003e:\u003ctwin_id\u003e):Base64(signature)",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Update ZOS Version Request",
                         "name": "body",
@@ -968,6 +1068,45 @@ const docTemplate = `{
                 }
             }
         },
+        "server.UpdateNodeRequest": {
+            "type": "object",
+            "required": [
+                "farm_id",
+                "interfaces",
+                "location",
+                "resources",
+                "secure_boot",
+                "serial_number",
+                "virtualized"
+            ],
+            "properties": {
+                "farm_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "interfaces": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Interface"
+                    }
+                },
+                "location": {
+                    "$ref": "#/definitions/db.Location"
+                },
+                "resources": {
+                    "$ref": "#/definitions/db.Resources"
+                },
+                "secure_boot": {
+                    "type": "boolean"
+                },
+                "serial_number": {
+                    "type": "string"
+                },
+                "virtualized": {
+                    "type": "boolean"
+                }
+            }
+        },
         "server.UptimeReportRequest": {
             "type": "object",
             "required": [
@@ -997,14 +1136,6 @@ const docTemplate = `{
         "time.Duration": {
             "type": "integer",
             "enum": [
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
                 1,
                 1000,
                 1000000,
@@ -1012,14 +1143,6 @@ const docTemplate = `{
                 60000000000
             ],
             "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
@@ -1032,12 +1155,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Node Registrar API",
+	Description:      "API for managing TFGrid node registration",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
