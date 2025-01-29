@@ -19,6 +19,7 @@ type Account struct {
 	// (still SS58 can be used or plain base58 ,TBD)
 	PublicKey string `gorm:"type:text;not null;unique"`
 	// Relations | likely we need to use OnDelete:RESTRICT (Prevent Twin deletion if farms exist)
+	// @swagger:ignore
 	Farms []Farm `gorm:"foreignKey:TwinID;references:TwinID;constraint:OnDelete:RESTRICT"`
 }
 
@@ -29,7 +30,7 @@ type Farm struct {
 	Dedicated bool   `json:"dedicated"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-
+	// @swagger:ignore
 	Nodes []Node `gorm:"foreignKey:FarmID;references:FarmID;constraint:OnDelete:RESTRICT" json:"nodes"`
 }
 
