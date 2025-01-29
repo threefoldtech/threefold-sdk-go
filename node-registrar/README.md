@@ -139,5 +139,5 @@ Key Tables:
 ### Generating Swagger Docs
 
 ```bash
-swag init -g pkg/server/handlers.go --output docs/
+swag init -g pkg/server/handlers.go --output docs --parseDependency --parseDepth 2
 ```
