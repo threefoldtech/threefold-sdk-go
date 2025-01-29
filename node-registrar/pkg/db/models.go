@@ -1,9 +1,6 @@
 package db
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/lib/pq"
@@ -40,11 +37,11 @@ type Node struct {
 	FarmID uint64 `json:"farm_id" gorm:"not null;check:farm_id> 0;foreignKey:FarmID;references:FarmID;constraint:OnDelete:RESTRICT"`
 	TwinID uint64 `json:"twin_id" gorm:"not null;unique;check:twin_id > 0;foreignKey:TwinID;references:TwinID;constraint:OnDelete:RESTRICT"` // Node account reference
 
-	Location Location `json:"location" gorm:"not null;type:json"`
+	Location Location `json:"location" gorm:"not null;type:json;serializer:json"`
 
 	// PublicConfig PublicConfig `json:"public_config" gorm:"type:json"`
-	Resources    Resources   `json:"resources" gorm:"not null;type:json"`
-	Interfaces   []Interface `json:"interface" gorm:"not null;type:json"`
+	Resources    Resources   `json:"resources" gorm:"not null;type:json;serializer:json"`
+	Interfaces   []Interface `json:"interface" gorm:"not null;type:json;serializer:json"`
 	SecureBoot   bool
 	Virtualized  bool
 	SerialNumber string
@@ -76,7 +73,7 @@ type Interface struct {
 	IPs  string `json:"ips"`
 }
 
-// Value implements the Valuer interface for storing Interface in the database
+/* // Value implements the Valuer interface for storing Interface in the database
 func (i Interface) Value() (driver.Value, error) {
 	bytes, err := json.Marshal(i)
 	if err != nil {
@@ -96,7 +93,7 @@ func (i *Interface) Scan(value any) error {
 		return fmt.Errorf("failed to unmarshal Interface: %w", err)
 	}
 	return nil
-}
+} */
 
 type Resources struct {
 	HRU uint64 `json:"hru"`
@@ -105,7 +102,7 @@ type Resources struct {
 	MRU uint64 `json:"mru"`
 }
 
-// Value implements the Valuer interface for storing Resources in the database
+/* // Value implements the Valuer interface for storing Resources in the database
 func (r Resources) Value() (driver.Value, error) {
 	bytes, err := json.Marshal(r)
 	if err != nil {
@@ -125,7 +122,7 @@ func (r *Resources) Scan(value any) error {
 		return fmt.Errorf("failed to unmarshal resources: %w", err)
 	}
 	return nil
-}
+} */
 
 type Location struct {
 	Country   string `json:"country" gorm:"not null"`
@@ -134,7 +131,7 @@ type Location struct {
 	Latitude  string `json:"latitude" gorm:"not null"`
 }
 
-// Value implements the Valuer interface for storing Location in the database
+/* // Value implements the Valuer interface for storing Location in the database
 func (l Location) Value() (driver.Value, error) {
 	bytes, err := json.Marshal(l)
 	if err != nil {
@@ -154,7 +151,7 @@ func (l *Location) Scan(value any) error {
 		return fmt.Errorf("failed to unmarshal Location: %w", err)
 	}
 	return nil
-}
+} */
 
 //	type PublicConfig struct {
 //		PublicIPV4 string `json:"public_ip_v4"`
