@@ -606,17 +606,18 @@ func (s *Server) updateAccountHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "account updated successfully"})
 }
 
-// getAccountHandler retrieves an account by twin ID
-// @Summary Retrieve an account by twin ID
-// @Description This endpoint retrieves an account by its twin ID.
+// getAccountHandler retrieves an account by twin ID or public key
+// @Summary Retrieve an account by twin ID or public key
+// @Description This endpoint retrieves an account by its twin ID or public key.
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param twin_id path uint64 true "Twin ID of the account"
+// @Param twin_id query uint64 false "Twin ID of the account"
+// @Param public_key query string false "Base64 decoded Public key of the account"
 // @Success 200 {object} db.Account "Account details"
-// @Failure 400 {object} gin.H "Invalid twin ID"
+// @Failure 400 {object} gin.H "Invalid request"
 // @Failure 404 {object} gin.H "Account not found"
-// @Router /accounts/{twin_id} [get]
+// @Router /accounts [get]
 func (s *Server) getAccountHandler(c *gin.Context) {
 	twinIDParam := c.Query("twin_id")
 	publicKeyParam := c.Query("public_key")
@@ -676,6 +677,17 @@ type ZOSVersionRequest struct {
 	Version string `json:"version" binding:"required,base64"`
 }
 
+// @Summary Set ZOS Version
+// @Description Sets the ZOS version
+// @Tags ZOS
+// @Accept json
+// @Produce json
+// @Param body body ZOSVersionRequest true "Update ZOS Version Request"
+// @Success 200 {object} gin.H "OK"
+// @Failure 400 {object} gin.H "Bad Request"
+// @Failure 409 {object} gin.H "Conflict"
+// @Failure 500 {object} gin.H "Internal Server Error"
+// @Router /zos/version [post]
 func (s *Server) setZOSVersionHandler(c *gin.Context) {
 	ensureOwner(c, s.adminTwinID)
 	if c.IsAborted() {
@@ -700,6 +712,14 @@ func (s *Server) setZOSVersionHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// @Summary Get ZOS Version
+// @Description Gets the ZOS version
+// @Tags ZOS
+// @Produce json
+// @Success 200 {object} gin.H "OK"
+// @Failure 404 {object} gin.H "Not Found"
+// @Failure 500 {object} gin.H "Internal Server Error"
+// @Router /zos/version [get]
 func (s *Server) getZOSVersionHandler(c *gin.Context) {
 	version, err := s.db.GetZOSVersion()
 	if err != nil {
