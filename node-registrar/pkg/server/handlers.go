@@ -95,12 +95,13 @@ func (s Server) getFarmHandler(c *gin.Context) {
 // @Summary Create new farm
 // @Description Create a new farm entry
 // @Tags farms
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param farm body db.Farm true "Farm creation data"
 // @Success 201 {object} gin.H "Farm created successfully"
 // @Failure 400 {object} gin.H "Invalid request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 409 {object} gin.H "Farm already exists"
 // @Router /farms [post]
 func (s Server) createFarmHandler(c *gin.Context) {
@@ -141,13 +142,14 @@ type UpdateFarmRequest struct {
 // @Summary Update farm
 // @Description Update existing farm details
 // @Tags farms
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param farm_id path int true "Farm ID"
 // @Param request body UpdateFarmRequest true "Farm update data"
 // @Success 200 {object} gin.H "Farm updated successfully"
 // @Failure 400 {object} gin.H "Invalid request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 404 {object} gin.H "Farm not found"
 // @Router /farms/{farm_id} [patch]
 func (s Server) updateFarmsHandler(c *gin.Context) {
@@ -286,12 +288,13 @@ type NodeRegistrationRequest struct {
 // @Summary Register new node
 // @Description Register a new node in the system
 // @Tags nodes
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param request body NodeRegistrationRequest true "Node registration data"
 // @Success 201 {object} gin.H "Node registered successfully"
 // @Failure 400 {object} gin.H "Invalid request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 409 {object} gin.H "Node already exists"
 // @Router /nodes [post]
 func (s Server) registerNodeHandler(c *gin.Context) {
@@ -350,13 +353,14 @@ type UpdateNodeRequest struct {
 // @Summary Update node
 // @Description Update existing node details
 // @Tags nodes
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param node_id path int true "Node ID"
 // @Param request body UpdateNodeRequest true "Node update data"
 // @Success 200 {object} gin.H "Node updated successfully"
 // @Failure 400 {object} gin.H "Invalid request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 404 {object} gin.H "Node not found"
 // @Router /nodes/{node_id} [patch]
 func (s *Server) updateNodeHandler(c *gin.Context) {
@@ -421,13 +425,14 @@ type UptimeReportRequest struct {
 // @Summary Report node uptime
 // @Description Submit uptime report for a node
 // @Tags nodes
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param node_id path int true "Node ID"
 // @Param request body UptimeReportRequest true "Uptime report data"
 // @Success 201 {object} gin.H "Uptime reported successfully"
 // @Failure 400 {object} gin.H "Invalid request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 404 {object} gin.H "Node not found"
 // @Router /nodes/{node_id}/uptime [post]
 func (s *Server) uptimeReportHandler(c *gin.Context) {
@@ -588,13 +593,14 @@ type UpdateAccountRequest struct {
 // @Summary Update account details
 // @Description Updates an account's relays and RMB encryption key
 // @Tags accounts
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param twin_id path uint64 true "Twin ID of the account"
 // @Param account body UpdateAccountRequest true "Account details to update"
 // @Success 200 {object} gin.H "Account updated successfully"
 // @Failure 400 {object} gin.H "Invalid request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 404 {object} gin.H "Account not found"
 // @Router /accounts/{twin_id} [patch]
 func (s *Server) updateAccountHandler(c *gin.Context) {
@@ -702,12 +708,13 @@ type ZOSVersionRequest struct {
 // @Summary Set ZOS Version
 // @Description Sets the ZOS version
 // @Tags ZOS
-// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Accept json
 // @Produce json
+// @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param body body ZOSVersionRequest true "Update ZOS Version Request"
 // @Success 200 {object} gin.H "OK"
 // @Failure 400 {object} gin.H "Bad Request"
+// @Failure 401 {object} gin.H "Unauthorized"
 // @Failure 409 {object} gin.H "Conflict"
 // @Failure 500 {object} gin.H "Internal Server Error"
 // @Router /zos/version [post]
