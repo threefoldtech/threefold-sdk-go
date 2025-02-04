@@ -699,7 +699,7 @@ func (s *Server) getAccountHandler(c *gin.Context) {
 			return
 		}
 		log.Info().Any("account", account).Send()
-		c.JSON(http.StatusOK, gin.H{"account": account})
+		c.JSON(http.StatusOK, account)
 		return
 	}
 }
