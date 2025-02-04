@@ -227,7 +227,6 @@ func (s Server) listNodesHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println(filter, limit)
 
 	nodes, err := s.db.ListNodes(filter, limit)
 	if err != nil {
