@@ -342,11 +342,11 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 
 type UpdateNodeRequest struct {
 	FarmID       uint64         `json:"farm_id" binding:"required,min=1"`
-	Resources    db.Resources   `json:"resources" binding:"required,min=1"`
+	Resources    db.Resources   `json:"resources" binding:"required"`
 	Location     db.Location    `json:"location" binding:"required"`
-	Interfaces   []db.Interface `json:"interfaces" binding:"required,dive"`
-	SecureBoot   bool           `json:"secure_boot" binding:"required"`
-	Virtualized  bool           `json:"virtualized" binding:"required"`
+	Interfaces   []db.Interface `json:"interfaces" binding:"required"`
+	SecureBoot   bool           `json:"secure_boot"`
+	Virtualized  bool           `json:"virtualized"`
 	SerialNumber string         `json:"serial_number" binding:"required"`
 }
 
@@ -391,6 +391,7 @@ func (s *Server) updateNodeHandler(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
+	log.Debug().Any("req", req).Send()
 
 	// Prepare update fields
 	updates := map[string]interface{}{
