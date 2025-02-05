@@ -53,10 +53,10 @@ func (db *Database) RegisterNode(node Node) (uint64, error) {
 	return node.NodeID, nil
 }
 
-func (db *Database) UpdateNode(nodeID uint64, updates map[string]interface{}) error {
+func (db *Database) UpdateNode(nodeID uint64, node Node) error {
 	result := db.gormDB.Model(&Node{}).
 		Where("node_id = ?", nodeID).
-		Updates(updates)
+		Updates(node)
 
 	if result.Error != nil {
 		return result.Error

@@ -41,7 +41,7 @@ type Node struct {
 
 	// PublicConfig PublicConfig `json:"public_config" gorm:"type:json"`
 	Resources    Resources   `json:"resources" gorm:"not null;type:json;serializer:json"`
-	Interfaces   []Interface `json:"interface" gorm:"not null;type:json;serializer:json"`
+	Interfaces   []Interface `gorm:"not null;type:json;serializer:json"`
 	SecureBoot   bool
 	Virtualized  bool
 	SerialNumber string

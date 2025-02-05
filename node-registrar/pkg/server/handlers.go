@@ -279,7 +279,7 @@ type NodeRegistrationRequest struct {
 	FarmID       uint64         `json:"farm_id" binding:"required,min=1"`
 	Resources    db.Resources   `json:"resources" binding:"required"`
 	Location     db.Location    `json:"location" binding:"required"`
-	Interfaces   []db.Interface `json:"interfaces" binding:"required,min=1,dive"`
+	Interfaces   []db.Interface `json:"interfaces" binding:"required"`
 	SecureBoot   bool           `json:"secure_boot"`
 	Virtualized  bool           `json:"virtualized"`
 	SerialNumber string         `json:"serial_number" binding:"required"`
@@ -393,21 +393,21 @@ func (s *Server) updateNodeHandler(c *gin.Context) {
 	}
 	log.Debug().Any("req", req).Send()
 
-	// Prepare update fields
-	updates := map[string]interface{}{
-		"farm_id":       req.FarmID,
-		"resources":     req.Resources,
-		"location":      req.Location,
-		"interfaces":    req.Interfaces,
-		"secure_boot":   req.SecureBoot,
-		"virtualized":   req.Virtualized,
-		"serial_number": req.SerialNumber,
-	}
-	if req.FarmID != existingNode.FarmID {
-		updates["approved"] = false
+	updatedNode := db.Node{
+		FarmID:       req.FarmID,
+		Resources:    req.Resources,
+		Location:     req.Location,
+		Interfaces:   req.Interfaces,
+		SecureBoot:   req.SecureBoot,
+		Virtualized:  req.Virtualized,
+		SerialNumber: req.SerialNumber,
 	}
 
-	if err := s.db.UpdateNode(nodeID, updates); err != nil {
+	if req.FarmID != existingNode.FarmID {
+		updatedNode.Approved = false
+	}
+
+	if err := s.db.UpdateNode(nodeID, updatedNode); err != nil {
 		if errors.Is(err, db.ErrRecordNotFound) {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "node not found"})
 			return
