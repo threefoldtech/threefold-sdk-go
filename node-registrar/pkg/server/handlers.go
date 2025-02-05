@@ -34,8 +34,8 @@ const (
 // @Param twin_id query int false "Filter by twin ID"
 // @Param page query int false "Page number" default(1)
 // @Param size query int false "Results per page" default(10)
-// @Success 200 {object} gin.H "List of farms"
-// @Failure 400 {object} gin.H "Bad request"
+// @Success 200 {object} []db.Farm "List of farms"
+// @Failure 400 {object} map[string]any "Bad request"
 // @Router /farms [get]
 func (s Server) listFarmsHandler(c *gin.Context) {
 	var filter db.FarmFilter
@@ -53,9 +53,7 @@ func (s Server) listFarmsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"farms": farms,
-	})
+	c.JSON(http.StatusOK, farms)
 }
 
 // @Summary Get farm details
@@ -64,9 +62,9 @@ func (s Server) listFarmsHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param farm_id path int true "Farm ID"
-// @Success 200 {object} gin.H "Farm details"
-// @Failure 400 {object} gin.H "Invalid farm ID"
-// @Failure 404 {object} gin.H "Farm not found"
+// @Success 200 {object} db.Farm "Farm details"
+// @Failure 400 {object} map[string]any "Invalid farm ID"
+// @Failure 404 {object} map[string]any "Farm not found"
 // @Router /farms/{farm_id} [get]
 func (s Server) getFarmHandler(c *gin.Context) {
 	farmID := c.Param("farm_id")
@@ -88,9 +86,7 @@ func (s Server) getFarmHandler(c *gin.Context) {
 		c.JSON(status, gin.H{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"farm": farm,
-	})
+	c.JSON(http.StatusOK, farm)
 }
 
 // @Summary Create new farm
@@ -100,10 +96,10 @@ func (s Server) getFarmHandler(c *gin.Context) {
 // @Produce json
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param farm body db.Farm true "Farm creation data"
-// @Success 201 {object} gin.H "Farm created successfully"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 409 {object} gin.H "Farm already exists"
+// @Success 201 {object} db.Farm "Farm created successfully"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 409 {object} map[string]any "Farm already exists"
 // @Router /farms [post]
 func (s Server) createFarmHandler(c *gin.Context) {
 	var farm db.Farm
@@ -130,10 +126,7 @@ func (s Server) createFarmHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Farm created successfully",
-		"farm_id": farmID,
-	})
+	c.JSON(http.StatusCreated, farmID)
 }
 
 type UpdateFarmRequest struct {
@@ -148,10 +141,10 @@ type UpdateFarmRequest struct {
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param farm_id path int true "Farm ID"
 // @Param request body UpdateFarmRequest true "Farm update data"
-// @Success 200 {object} gin.H "Farm updated successfully"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 404 {object} gin.H "Farm not found"
+// @Success 200 {object} map[string]any "Farm updated successfully"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 404 {object} map[string]any "Farm not found"
 // @Router /farms/{farm_id} [patch]
 func (s Server) updateFarmsHandler(c *gin.Context) {
 	var req UpdateFarmRequest
@@ -215,8 +208,8 @@ func (s Server) updateFarmsHandler(c *gin.Context) {
 // @Param healthy query bool false "Filter by health status"
 // @Param page query int false "Page number" default(1)
 // @Param size query int false "Results per page" default(10)
-// @Success 200 {object} gin.H "List of nodes"
-// @Failure 400 {object} gin.H "Bad request"
+// @Success 200 {object} []db.Node "List of nodes"
+// @Failure 400 {object} map[string]any "Bad request"
 // @Router /nodes [get]
 func (s Server) listNodesHandler(c *gin.Context) {
 	var filter db.NodeFilter
@@ -234,9 +227,7 @@ func (s Server) listNodesHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"nodes": nodes,
-	})
+	c.JSON(http.StatusOK, nodes)
 }
 
 // @Summary Get node details
@@ -245,9 +236,9 @@ func (s Server) listNodesHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param node_id path int true "Node ID"
-// @Success 200 {object} gin.H "Node details"
-// @Failure 400 {object} gin.H "Invalid node ID"
-// @Failure 404 {object} gin.H "Node not found"
+// @Success 200 {object} db.Node "Node details"
+// @Failure 400 {object} map[string]any "Invalid node ID"
+// @Failure 404 {object} map[string]any "Node not found"
 // @Router /nodes/{node_id} [get]
 func (s Server) getNodeHandler(c *gin.Context) {
 	nodeID := c.Param("node_id")
@@ -269,9 +260,7 @@ func (s Server) getNodeHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"node": node,
-	})
+	c.JSON(http.StatusOK, node)
 }
 
 type NodeRegistrationRequest struct {
@@ -292,10 +281,10 @@ type NodeRegistrationRequest struct {
 // @Produce json
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param request body NodeRegistrationRequest true "Node registration data"
-// @Success 201 {object} gin.H "Node registered successfully"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 409 {object} gin.H "Node already exists"
+// @Success 201 {object} uint64 "ID of the created node"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 409 {object} map[string]any "Node already exists"
 // @Router /nodes [post]
 func (s Server) registerNodeHandler(c *gin.Context) {
 	var req NodeRegistrationRequest
@@ -334,10 +323,7 @@ func (s Server) registerNodeHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "node registered successfully",
-		"node_id": nodeID,
-	})
+	c.JSON(http.StatusCreated, nodeID)
 }
 
 type UpdateNodeRequest struct {
@@ -358,10 +344,10 @@ type UpdateNodeRequest struct {
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param node_id path int true "Node ID"
 // @Param request body UpdateNodeRequest true "Node update data"
-// @Success 200 {object} gin.H "Node updated successfully"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 404 {object} gin.H "Node not found"
+// @Success 200 {object} map[string]any "Node updated successfully"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 404 {object} map[string]any "Node not found"
 // @Router /nodes/{node_id} [patch]
 func (s *Server) updateNodeHandler(c *gin.Context) {
 	nodeID, err := strconv.ParseUint(c.Param("node_id"), 10, 64)
@@ -432,10 +418,10 @@ type UptimeReportRequest struct {
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param node_id path int true "Node ID"
 // @Param request body UptimeReportRequest true "Uptime report data"
-// @Success 201 {object} gin.H "Uptime reported successfully"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 404 {object} gin.H "Node not found"
+// @Success 201 {object} map[string]any "Uptime reported successfully"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 404 {object} map[string]any "Node not found"
 // @Router /nodes/{node_id}/uptime [post]
 func (s *Server) uptimeReportHandler(c *gin.Context) {
 	nodeID := c.Param("node_id")
@@ -511,8 +497,8 @@ type AccountCreationRequest struct {
 // @Produce json
 // @Param request body AccountCreationRequest true "Account creation data"
 // @Success 201 {object} db.Account "Created account details"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 409 {object} gin.H "Account already exists"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 409 {object} map[string]any "Account already exists"
 // @Router /accounts [post]
 func (s *Server) createAccountHandler(c *gin.Context) {
 	var req AccountCreationRequest
@@ -600,10 +586,10 @@ type UpdateAccountRequest struct {
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param twin_id path uint64 true "Twin ID of the account"
 // @Param account body UpdateAccountRequest true "Account details to update"
-// @Success 200 {object} gin.H "Account updated successfully"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 404 {object} gin.H "Account not found"
+// @Success 200 {object} map[string]any "Account updated successfully"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 404 {object} map[string]any "Account not found"
 // @Router /accounts/{twin_id} [patch]
 func (s *Server) updateAccountHandler(c *gin.Context) {
 	twinID, err := strconv.ParseUint(c.Param("twin_id"), 10, 64)
@@ -645,8 +631,8 @@ func (s *Server) updateAccountHandler(c *gin.Context) {
 // @Param twin_id query uint64 false "Twin ID of the account"
 // @Param public_key query string false "Base64 decoded Public key of the account"
 // @Success 200 {object} db.Account "Account details"
-// @Failure 400 {object} gin.H "Invalid request"
-// @Failure 404 {object} gin.H "Account not found"
+// @Failure 400 {object} map[string]any "Invalid request"
+// @Failure 404 {object} map[string]any "Account not found"
 // @Router /accounts [get]
 func (s *Server) getAccountHandler(c *gin.Context) {
 	twinIDParam := c.Query("twin_id")
@@ -715,11 +701,11 @@ type ZOSVersionRequest struct {
 // @Produce json
 // @Param X-Auth header string true "Authentication format: Base64(<unix_timestamp>:<twin_id>):Base64(signature)"
 // @Param body body ZOSVersionRequest true "Update ZOS Version Request"
-// @Success 200 {object} gin.H "OK"
-// @Failure 400 {object} gin.H "Bad Request"
-// @Failure 401 {object} gin.H "Unauthorized"
-// @Failure 409 {object} gin.H "Conflict"
-// @Failure 500 {object} gin.H "Internal Server Error"
+// @Success 200 {object} map[string]any "OK"
+// @Failure 400 {object} map[string]any "Bad Request"
+// @Failure 401 {object} map[string]any "Unauthorized"
+// @Failure 409 {object} map[string]any "Conflict"
+// @Failure 500 {object} map[string]any "Internal Server Error"
 // @Router /zos/version [post]
 func (s *Server) setZOSVersionHandler(c *gin.Context) {
 	ensureOwner(c, s.adminTwinID)
@@ -749,9 +735,9 @@ func (s *Server) setZOSVersionHandler(c *gin.Context) {
 // @Description Gets the ZOS version
 // @Tags ZOS
 // @Produce json
-// @Success 200 {object} gin.H "OK"
-// @Failure 404 {object} gin.H "Not Found"
-// @Failure 500 {object} gin.H "Internal Server Error"
+// @Success 200 {object} string "zos version"
+// @Failure 404 {object} map[string]any "Not Found"
+// @Failure 500 {object} map[string]any "Internal Server Error"
 // @Router /zos/version [get]
 func (s *Server) getZOSVersionHandler(c *gin.Context) {
 	version, err := s.db.GetZOSVersion()
@@ -764,7 +750,7 @@ func (s *Server) getZOSVersionHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"version": version})
+	c.JSON(http.StatusOK, version)
 }
 
 // Helper function to validate public key format
