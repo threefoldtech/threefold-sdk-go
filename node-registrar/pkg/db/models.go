@@ -8,8 +8,8 @@ import (
 
 type Account struct {
 	TwinID    uint64         `gorm:"primaryKey;autoIncrement" json:"twin_id"`
-	Relays    pq.StringArray `gorm:"type:text[];default:'{}'" json:"relays"` // Optional list of relay domains
-	RMBEncKey string         `gorm:"type:text" json:"rmb_enc_key"`           // Optional base64 encoded public key for rmb communication
+	Relays    pq.StringArray `gorm:"type:text[];default:'{}'" json:"relays" swaggertype:"array,string"` // Optional list of relay domains
+	RMBEncKey string         `gorm:"type:text" json:"rmb_enc_key"`                                      // Optional base64 encoded public key for rmb communication
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	// The public key (ED25519 for nodes, ED25519 or SR25519 for farmers) in the more standard base64 since we are moving from substrate echo system?
@@ -56,7 +56,7 @@ type Node struct {
 type UptimeReport struct {
 	ID         uint64        `gorm:"primaryKey;autoIncrement"`
 	NodeID     uint64        `gorm:"index" json:"node_id"`
-	Duration   time.Duration // Uptime duration for this period
+	Duration   time.Duration `swaggertype:"integer"` // Uptime duration for this period
 	Timestamp  time.Time     `gorm:"index"`
 	WasRestart bool          // True if this report followed a restart
 	CreatedAt  time.Time

@@ -1,4 +1,3 @@
-basePath: /v1
 definitions:
   db.Account:
     properties:
@@ -11,7 +10,7 @@ definitions:
         items:
           $ref: '#/definitions/db.Farm'
         type: array
-      publicKey:
+      public_key:
         description: |-
           The public key (ED25519 for nodes, ED25519 or SR25519 for farmers) in the more standard base64 since we are moving from substrate echo system?
           (still SS58 can be used or plain base58 ,TBD)
@@ -24,7 +23,7 @@ definitions:
       rmb_enc_key:
         description: Optional base64 encoded public key for rmb communication
         type: string
-      twinID:
+      twin_id:
         type: integer
       updatedAt:
         type: string
@@ -80,7 +79,7 @@ definitions:
         description: Constraints set to prevents unintended account deletion if linked
           Farms/nodes exist.
         type: integer
-      interface:
+      interfaces:
         items:
           $ref: '#/definitions/db.Interface'
         type: array
@@ -124,21 +123,17 @@ definitions:
       createdAt:
         type: string
       duration:
-        allOf:
-        - $ref: '#/definitions/time.Duration'
         description: Uptime duration for this period
+        type: integer
       id:
         type: integer
-      nodeID:
+      node_id:
         type: integer
       timestamp:
         type: string
       wasRestart:
         description: True if this report followed a restart
         type: boolean
-    type: object
-  gin.H:
-    additionalProperties: {}
     type: object
   server.AccountCreationRequest:
     properties:
@@ -171,7 +166,6 @@ definitions:
       interfaces:
         items:
           $ref: '#/definitions/db.Interface'
-        minItems: 1
         type: array
       location:
         $ref: '#/definitions/db.Location'
@@ -195,13 +189,6 @@ definitions:
     - twin_id
     type: object
   server.UpdateAccountRequest:
-    properties:
-      relays:
-        items:
-          type: string
-        type: array
-      rmb_enc_key:
-        type: string
     type: object
   server.UpdateFarmRequest:
     properties:
@@ -236,19 +223,9 @@ definitions:
     - interfaces
     - location
     - resources
-    - secure_boot
     - serial_number
-    - virtualized
     type: object
   server.UptimeReportRequest:
-    properties:
-      timestamp:
-        type: string
-      uptime:
-        $ref: '#/definitions/time.Duration'
-    required:
-    - timestamp
-    - uptime
     type: object
   server.ZOSVersionRequest:
     properties:
@@ -257,25 +234,8 @@ definitions:
     required:
     - version
     type: object
-  time.Duration:
-    enum:
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    type: integer
-    x-enum-varnames:
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
 info:
   contact: {}
-  description: API for managing TFGrid node registration
-  title: Node Registrar API
-  version: "1.0"
 paths:
   /accounts:
     get:
@@ -301,11 +261,13 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "404":
           description: Account not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Retrieve an account by twin ID or public key
       tags:
       - accounts
@@ -330,11 +292,13 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "409":
           description: Account already exists
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Create new account
       tags:
       - accounts
@@ -366,15 +330,23 @@ paths:
         "200":
           description: Account updated successfully
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
           description: Account not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Update account details
       tags:
       - accounts
@@ -412,11 +384,14 @@ paths:
         "200":
           description: List of farms
           schema:
-            $ref: '#/definitions/gin.H'
+            items:
+              $ref: '#/definitions/db.Farm'
+            type: array
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: List farms
       tags:
       - farms
@@ -442,15 +417,22 @@ paths:
         "201":
           description: Farm created successfully
           schema:
-            $ref: '#/definitions/gin.H'
+            $ref: '#/definitions/db.Farm'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "409":
           description: Farm already exists
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Create new farm
       tags:
       - farms
@@ -471,15 +453,17 @@ paths:
         "200":
           description: Farm details
           schema:
-            $ref: '#/definitions/gin.H'
+            $ref: '#/definitions/db.Farm'
         "400":
           description: Invalid farm ID
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "404":
           description: Farm not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Get farm details
       tags:
       - farms
@@ -510,15 +494,23 @@ paths:
         "200":
           description: Farm updated successfully
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
           description: Farm not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Update farm
       tags:
       - farms
@@ -564,11 +556,14 @@ paths:
         "200":
           description: List of nodes
           schema:
-            $ref: '#/definitions/gin.H'
+            items:
+              $ref: '#/definitions/db.Node'
+            type: array
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: List nodes
       tags:
       - nodes
@@ -592,17 +587,24 @@ paths:
       - application/json
       responses:
         "201":
-          description: Node registered successfully
+          description: ID of the created node
           schema:
-            $ref: '#/definitions/gin.H'
+            type: integer
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "409":
           description: Node already exists
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Register new node
       tags:
       - nodes
@@ -623,15 +625,17 @@ paths:
         "200":
           description: Node details
           schema:
-            $ref: '#/definitions/gin.H'
+            $ref: '#/definitions/db.Node'
         "400":
           description: Invalid node ID
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "404":
           description: Node not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Get node details
       tags:
       - nodes
@@ -662,15 +666,23 @@ paths:
         "200":
           description: Node updated successfully
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
           description: Node not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Update node
       tags:
       - nodes
@@ -702,15 +714,23 @@ paths:
         "201":
           description: Uptime reported successfully
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
           description: Node not found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Report node uptime
       tags:
       - nodes
@@ -721,17 +741,19 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: zos version
           schema:
-            $ref: '#/definitions/gin.H'
+            type: string
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Get ZOS Version
       tags:
       - ZOS
@@ -757,19 +779,28 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/gin.H'
+            additionalProperties: true
+            type: object
       summary: Set ZOS Version
       tags:
       - ZOS

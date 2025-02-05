@@ -52,13 +52,15 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Account not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -96,13 +98,15 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "409": {
                         "description": "Account already exists",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -150,19 +154,29 @@ const docTemplate = `{
                     "200": {
                         "description": "Account updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Account not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -219,13 +233,17 @@ const docTemplate = `{
                     "200": {
                         "description": "List of farms",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Farm"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -264,19 +282,28 @@ const docTemplate = `{
                     "201": {
                         "description": "Farm created successfully",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/db.Farm"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "409": {
                         "description": "Farm already exists",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -308,19 +335,21 @@ const docTemplate = `{
                     "200": {
                         "description": "Farm details",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/db.Farm"
                         }
                     },
                     "400": {
                         "description": "Invalid farm ID",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Farm not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -366,19 +395,29 @@ const docTemplate = `{
                     "200": {
                         "description": "Farm updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Farm not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -447,13 +486,17 @@ const docTemplate = `{
                     "200": {
                         "description": "List of nodes",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Node"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -490,21 +533,30 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Node registered successfully",
+                        "description": "ID of the created node",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "integer"
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "409": {
                         "description": "Node already exists",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -536,19 +588,21 @@ const docTemplate = `{
                     "200": {
                         "description": "Node details",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/db.Node"
                         }
                     },
                     "400": {
                         "description": "Invalid node ID",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Node not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -594,19 +648,29 @@ const docTemplate = `{
                     "200": {
                         "description": "Node updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Node not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -654,19 +718,29 @@ const docTemplate = `{
                     "201": {
                         "description": "Uptime reported successfully",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
                         "description": "Node not found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -684,21 +758,23 @@ const docTemplate = `{
                 "summary": "Get ZOS Version",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "zos version",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "string"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -737,25 +813,36 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -776,7 +863,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/db.Farm"
                     }
                 },
-                "publicKey": {
+                "public_key": {
                     "description": "The public key (ED25519 for nodes, ED25519 or SR25519 for farmers) in the more standard base64 since we are moving from substrate echo system?\n(still SS58 can be used or plain base58 ,TBD)",
                     "type": "string"
                 },
@@ -791,7 +878,7 @@ const docTemplate = `{
                     "description": "Optional base64 encoded public key for rmb communication",
                     "type": "string"
                 },
-                "twinID": {
+                "twin_id": {
                     "type": "integer"
                 },
                 "updatedAt": {
@@ -874,7 +961,7 @@ const docTemplate = `{
                     "description": "Constraints set to prevents unintended account deletion if linked Farms/nodes exist.",
                     "type": "integer"
                 },
-                "interface": {
+                "interfaces": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/db.Interface"
@@ -943,16 +1030,12 @@ const docTemplate = `{
                 },
                 "duration": {
                     "description": "Uptime duration for this period",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/time.Duration"
-                        }
-                    ]
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "nodeID": {
+                "node_id": {
                     "type": "integer"
                 },
                 "timestamp": {
@@ -963,10 +1046,6 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
-        },
-        "gin.H": {
-            "type": "object",
-            "additionalProperties": {}
         },
         "server.AccountCreationRequest": {
             "type": "object",
@@ -1015,7 +1094,6 @@ const docTemplate = `{
                 },
                 "interfaces": {
                     "type": "array",
-                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/db.Interface"
                     }
@@ -1042,18 +1120,7 @@ const docTemplate = `{
             }
         },
         "server.UpdateAccountRequest": {
-            "type": "object",
-            "properties": {
-                "relays": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "rmb_enc_key": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "server.UpdateFarmRequest": {
             "type": "object",
@@ -1075,9 +1142,7 @@ const docTemplate = `{
                 "interfaces",
                 "location",
                 "resources",
-                "secure_boot",
-                "serial_number",
-                "virtualized"
+                "serial_number"
             ],
             "properties": {
                 "farm_id": {
@@ -1108,19 +1173,7 @@ const docTemplate = `{
             }
         },
         "server.UptimeReportRequest": {
-            "type": "object",
-            "required": [
-                "timestamp",
-                "uptime"
-            ],
-            "properties": {
-                "timestamp": {
-                    "type": "string"
-                },
-                "uptime": {
-                    "$ref": "#/definitions/time.Duration"
-                }
-            }
+            "type": "object"
         },
         "server.ZOSVersionRequest": {
             "type": "object",
@@ -1132,35 +1185,18 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "time.Duration": {
-            "type": "integer",
-            "enum": [
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000
-            ],
-            "x-enum-varnames": [
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute"
-            ]
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "",
 	Host:             "",
-	BasePath:         "/v1",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Node Registrar API",
-	Description:      "API for managing TFGrid node registration",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
