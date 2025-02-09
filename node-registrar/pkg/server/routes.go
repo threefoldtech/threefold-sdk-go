@@ -38,11 +38,21 @@ func (s *Server) SetupRoutes() {
 	accountRoutes.Use(s.AuthMiddleware())
 	accountRoutes.PATCH("/:twin_id", s.updateAccountHandler)
 
+	// Contracts routes
+	contractsRoutes := v1.Group("contracts")
+	contractsRoutes.GET("/:contract_id", s.getContractHandler)
+	contractsRoutes.GET("/", s.listContractsHandler)
+	// protected by account key
+	contractsRoutes.Use(s.AuthMiddleware())
+	contractsRoutes.POST("/", s.createContractHandler)
+	contractsRoutes.PATCH("/:contract_id", s.updateContractHandler)
+	contractsRoutes.POST("/:contract_id/consumption", s.setContractConsumptionHandler)
+	contractsRoutes.DELETE("/:contract_id", s.cancelContractHandler)
+
 	// zOS Version endpoints
 	zosRoutes := v1.Group("/zos")
 	zosRoutes.GET("/version", s.getZOSVersionHandler)
 	// protected by admin key
 	zosRoutes.Use(s.AuthMiddleware())
 	zosRoutes.PUT("/version", s.setZOSVersionHandler)
-
 }

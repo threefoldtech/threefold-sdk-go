@@ -753,6 +753,24 @@ func (s *Server) getZOSVersionHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, version)
 }
 
+func (s *Server) getContractHandler(c *gin.Context) {
+}
+
+func (s *Server) listContractsHandler(c *gin.Context) {
+}
+
+func (s *Server) updateContractHandler(c *gin.Context) {
+}
+
+func (s *Server) setContractConsumptionHandler(c *gin.Context) {
+}
+
+func (s *Server) createContractHandler(c *gin.Context) {
+}
+
+func (s *Server) cancelContractHandler(c *gin.Context) {
+}
+
 // Helper function to validate public key format
 func isValidPublicKey(publicKeyBase64 string) bool {
 	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyBase64)
