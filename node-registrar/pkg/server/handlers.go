@@ -706,7 +706,7 @@ type ZOSVersionRequest struct {
 // @Failure 401 {object} map[string]any "Unauthorized"
 // @Failure 409 {object} map[string]any "Conflict"
 // @Failure 500 {object} map[string]any "Internal Server Error"
-// @Router /zos/version [post]
+// @Router /zos/version [put]
 func (s *Server) setZOSVersionHandler(c *gin.Context) {
 	ensureOwner(c, s.adminTwinID)
 	if c.IsAborted() {

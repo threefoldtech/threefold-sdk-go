@@ -7,6 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const ZOS4VersionKey = "zos_4"
+
 // ListNodes retrieves all nodes from the database with applied filters and pagination
 func (db *Database) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err error) {
 	query := db.gormDB.Model(&Node{})
@@ -81,16 +83,21 @@ func (db *Database) CreateUptimeReport(report *UptimeReport) error {
 
 func (db *Database) SetZOSVersion(version string) error {
 	var current ZosVersion
-	err := db.gormDB.FirstOrCreate(&current, ZosVersion{Key: "zos_4"}).Error
-	if err != nil {
-		return err
+	result := db.gormDB.Where(ZosVersion{Key: ZOS4VersionKey}).Attrs(ZosVersion{Version: version}).FirstOrCreate(&current)
+
+	if result.Error != nil {
+		return result.Error
 	}
 
-	if current.Version == version {
-		return errors.New("version already set")
+	if result.RowsAffected == 0 {
+		if current.Version == version {
+			return errors.New("version already set")
+		}
+		return db.gormDB.Model(&current).
+			Select("version").
+			Update("version", version).Error
 	}
-
-	return db.gormDB.Model(&current).Update("version", version).Error
+	return nil
 }
 
 func (db *Database) GetZOSVersion() (string, error) {
