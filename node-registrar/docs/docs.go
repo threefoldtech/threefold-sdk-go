@@ -779,7 +779,7 @@ const docTemplate = `{
                     }
                 }
             },
-            "post": {
+            "put": {
                 "description": "Sets the ZOS version",
                 "consumes": [
                     "application/json"
@@ -1120,7 +1120,18 @@ const docTemplate = `{
             }
         },
         "server.UpdateAccountRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "relays": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rmb_enc_key": {
+                    "type": "string"
+                }
+            }
         },
         "server.UpdateFarmRequest": {
             "type": "object",
@@ -1173,7 +1184,19 @@ const docTemplate = `{
             }
         },
         "server.UptimeReportRequest": {
-            "type": "object"
+            "type": "object",
+            "required": [
+                "timestamp",
+                "uptime"
+            ],
+            "properties": {
+                "timestamp": {
+                    "type": "string"
+                },
+                "uptime": {
+                    "$ref": "#/definitions/time.Duration"
+                }
+            }
         },
         "server.ZOSVersionRequest": {
             "type": "object",
@@ -1185,18 +1208,57 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Node Registrar API",
+	Description:      "API for managing TFGrid node registration",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

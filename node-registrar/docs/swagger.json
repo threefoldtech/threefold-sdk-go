@@ -1,8 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API for managing TFGrid node registration",
+        "title": "Node Registrar API",
+        "contact": {},
+        "version": "1.0"
     },
+    "basePath": "/v1",
     "paths": {
         "/accounts": {
             "get": {
@@ -768,7 +772,7 @@
                     }
                 }
             },
-            "post": {
+            "put": {
                 "description": "Sets the ZOS version",
                 "consumes": [
                     "application/json"
@@ -1109,7 +1113,18 @@
             }
         },
         "server.UpdateAccountRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "relays": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rmb_enc_key": {
+                    "type": "string"
+                }
+            }
         },
         "server.UpdateFarmRequest": {
             "type": "object",
@@ -1162,7 +1177,19 @@
             }
         },
         "server.UptimeReportRequest": {
-            "type": "object"
+            "type": "object",
+            "required": [
+                "timestamp",
+                "uptime"
+            ],
+            "properties": {
+                "timestamp": {
+                    "type": "string"
+                },
+                "uptime": {
+                    "$ref": "#/definitions/time.Duration"
+                }
+            }
         },
         "server.ZOSVersionRequest": {
             "type": "object",
@@ -1174,6 +1201,45 @@
                     "type": "string"
                 }
             }
+        },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
         }
     }
 }
