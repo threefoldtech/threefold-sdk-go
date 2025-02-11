@@ -19,11 +19,12 @@ import (
 
 type flags struct {
 	db.Config
-	debug      bool
-	version    bool
-	domain     string
-	serverPort uint
-	network    string
+	debug       bool
+	version     bool
+	domain      string
+	serverPort  uint
+	network     string
+	adminTwinID uint64
 }
 
 var (
@@ -55,6 +56,7 @@ func Run() error {
 	flag.UintVar(&f.serverPort, "server-port", 8080, "server port")
 	flag.StringVar(&f.domain, "domain", "", "domain on which the server will be served")
 	flag.StringVar(&f.network, "network", "dev", "the registrar network")
+	flag.Uint64Var(&f.adminTwinID, "admin-twin-id", 0, "admin twin ID")
 
 	flag.Parse()
 	f.SqlLogLevel = logger.LogLevel(sqlLogLevel)
@@ -86,7 +88,7 @@ func Run() error {
 		}
 	}()
 
-	s, err := server.NewServer(db, f.network)
+	s, err := server.NewServer(db, f.network, f.adminTwinID)
 	if err != nil {
 		return errors.Wrap(err, "failed to start gin server")
 	}
@@ -95,6 +97,7 @@ func Run() error {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	log.Info().Msg("server is running on port :8080")
+
 	err = s.Run(quit, fmt.Sprintf("%s:%d", f.domain, f.serverPort))
 	if err != nil {
 		return errors.Wrap(err, "failed to run gin server")
@@ -104,7 +107,7 @@ func Run() error {
 }
 
 func (f flags) validate() error {
-	if f.serverPort < 1 && f.serverPort > 65535 {
+	if f.serverPort < 1 || f.serverPort > 65535 {
 		return errors.Errorf("invalid port %d, server port should be in the valid port range 1–65535", f.serverPort)
 	}
 
@@ -112,7 +115,7 @@ func (f flags) validate() error {
 		return errors.New("invalid domain name, domain name should not be empty")
 	}
 	if _, err := net.LookupHost(f.domain); err != nil {
-		return errors.Wrapf(err, "invalid domain %s", f.PostgresHost)
+		return errors.Wrapf(err, "invalid domain %s", f.domain)
 	}
 
 	return f.Config.Validate()

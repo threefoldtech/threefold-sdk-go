@@ -2,7 +2,7 @@ run:
 	go run cmds/registrar.go --postgres-host localhost --postgres-port 5432 --postgres-db postgres --postgres-user postgres --postgres-password password --domain localhost --server-port 8080
 
 postgres:
-	docker run --name postgres -e POSTGRES_USER=postgres POSTGRES_PASSWORD=password POSTGRES_DB=postgres -p 5432:5432 -d postgres
+	docker run --name postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=postgres -p 5432:5432 -d postgres
 
 stop-postgres:
 	docker stop postgres && docker rm postgres
@@ -12,8 +12,8 @@ build: ## Bulil the server
 
 server-start:
 	@go run cmds/registrar.go \
-		--server-port :8080 \
-		--log-level debug \
+		--server-port 8080 \
+		--debug \
 		--domain localhost \
 		--sql-log-level 4 \
 		--postgres-host localhost \

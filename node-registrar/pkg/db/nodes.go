@@ -2,9 +2,12 @@ package db
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
+
+const ZOS4VersionKey = "zos_4"
 
 // ListNodes retrieves all nodes from the database with applied filters and pagination
 func (db *Database) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err error) {
@@ -18,9 +21,6 @@ func (db *Database) ListNodes(filter NodeFilter, limit Limit) (nodes []Node, err
 	}
 	if filter.TwinID != nil {
 		query = query.Where("twin_id = ?", *filter.TwinID)
-	}
-	if filter.Status != "" {
-		query = query.Where("status = ?", filter.Status)
 	}
 
 	offset := (limit.Page - 1) * limit.Size
@@ -45,47 +45,68 @@ func (db *Database) GetNode(nodeID uint64) (node Node, err error) {
 }
 
 // RegisterNode registers a new node in the database
-func (db *Database) RegisterNode(node Node) (err error) {
+func (db *Database) RegisterNode(node Node) (uint64, error) {
 	if result := db.gormDB.Create(&node); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return ErrRecordAlreadyExists
+			return 0, ErrRecordAlreadyExists
 		}
+		return 0, result.Error
+	}
+	return node.NodeID, nil
+}
+
+func (db *Database) UpdateNode(nodeID uint64, node Node) error {
+	result := db.gormDB.Model(&Node{}).
+		Where("node_id = ?", nodeID).
+		Updates(node)
+
+	if result.Error != nil {
 		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ErrRecordNotFound
 	}
 	return nil
 }
 
 // Uptime updates the uptime for a specific node
-func (db *Database) Uptime(nodeID uint64, report Uptime) (err error) {
-	var node Node
-	if result := db.gormDB.First(&node, nodeID); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return ErrRecordNotFound
-		}
+func (db *Database) GetUptimeReports(nodeID uint64, start, end time.Time) ([]UptimeReport, error) {
+	var reports []UptimeReport
+	result := db.gormDB.Where("node_id = ? AND timestamp BETWEEN ? AND ?",
+		nodeID, start, end).Order("timestamp asc").Find(&reports)
+	return reports, result.Error
+}
+
+func (db *Database) CreateUptimeReport(report *UptimeReport) error {
+	return db.gormDB.Create(report).Error
+}
+
+func (db *Database) SetZOSVersion(version string) error {
+	var current ZosVersion
+	result := db.gormDB.Where(ZosVersion{Key: ZOS4VersionKey}).Attrs(ZosVersion{Version: version}).FirstOrCreate(&current)
+
+	if result.Error != nil {
 		return result.Error
 	}
 
-	node.Uptime = report
-	if result := db.gormDB.Save(&node); result.Error != nil {
-		return result.Error
+	if result.RowsAffected == 0 {
+		if current.Version == version {
+			return errors.New("version already set")
+		}
+		return db.gormDB.Model(&current).
+			Select("version").
+			Update("version", version).Error
 	}
 	return nil
 }
 
-// Consumption updates the consumption report for a specific node
-func (db *Database) Consumption(nodeID uint64, report Consumption) (err error) {
-	var node Node
-
-	if err := db.gormDB.First(&node, nodeID).Error; err != nil {
+func (db *Database) GetZOSVersion() (string, error) {
+	var setting ZosVersion
+	if err := db.gormDB.Where("key = ?", "zos_4").First(&setting).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrRecordNotFound
+			return "", ErrRecordNotFound
 		}
-		return err
+		return "", err
 	}
-
-	node.Consumption = report
-	if result := db.gormDB.Save(&node); result.Error != nil {
-		return result.Error
-	}
-	return nil
+	return setting.Version, nil
 }
