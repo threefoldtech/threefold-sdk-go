@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/db"
+	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/metrics"
 	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/server"
 	"gorm.io/gorm/logger"
 )
@@ -76,7 +77,12 @@ func Run() error {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
-	db, err := db.NewDB(f.Config)
+	m := metrics.NewMetrics()
+	if err := m.Register(); err != nil {
+		return errors.Wrap(err, "failed to register metrics")
+	}
+
+	db, err := db.NewDB(f.Config, m)
 	if err != nil {
 		return errors.Wrap(err, "failed to open database with the specified configurations")
 	}
@@ -88,7 +94,7 @@ func Run() error {
 		}
 	}()
 
-	s, err := server.NewServer(db, f.network, f.adminTwinID)
+	s, err := server.NewServer(db, f.network, f.adminTwinID, m)
 	if err != nil {
 		return errors.Wrap(err, "failed to start gin server")
 	}

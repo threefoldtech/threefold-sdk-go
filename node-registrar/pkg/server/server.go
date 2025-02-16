@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/db"
+	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/metrics"
 )
 
 type Server struct {
@@ -16,12 +17,13 @@ type Server struct {
 	db          db.Database
 	network     string
 	adminTwinID uint64
+	metrics     *metrics.Metrics
 }
 
-func NewServer(db db.Database, network string, adminTwinID uint64) (s Server, err error) {
+func NewServer(db db.Database, network string, adminTwinID uint64, metrics *metrics.Metrics) (s Server, err error) {
 	router := gin.Default()
 
-	s = Server{router, db, network, adminTwinID}
+	s = Server{router, db, network, adminTwinID, metrics}
 	s.SetupRoutes()
 
 	return

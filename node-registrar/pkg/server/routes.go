@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/gin-gonic/gin"
 	_ "github.com/threefoldtech/tfgrid-sdk-go/node-registrar/docs"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -9,6 +10,8 @@ import (
 
 func (s *Server) SetupRoutes() {
 	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	s.router.GET("/metrics", gin.WrapH(s.metrics.MetricsHandler()))
+	s.router.Use(s.MetricsMiddleware())
 	v1 := s.router.Group("v1")
 
 	// farms routes

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/threefoldtech/tfgrid-sdk-go/node-registrar/pkg/metrics"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -28,6 +29,7 @@ type Config struct {
 type Database struct {
 	gormDB     *gorm.DB
 	connString string
+	metrics    *metrics.Metrics
 }
 
 var (
@@ -35,8 +37,8 @@ var (
 	ErrRecordAlreadyExists = errors.New("record already exists")
 )
 
-func NewDB(c Config) (Database, error) {
-	db, err := openDatabase(c)
+func NewDB(c Config, m *metrics.Metrics) (Database, error) {
+	db, err := openDatabase(c, m)
 	if err != nil {
 		return Database{}, err
 	}
@@ -57,7 +59,7 @@ func NewDB(c Config) (Database, error) {
 	return db, sql.Ping()
 }
 
-func openDatabase(c Config) (db Database, err error) {
+func openDatabase(c Config, m *metrics.Metrics) (db Database, err error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.DBName, c.SSLMode)
 
@@ -68,7 +70,7 @@ func openDatabase(c Config) (db Database, err error) {
 		return db, errors.Wrapf(err, "Failed to connect to the database: %v", err)
 	}
 
-	return Database{gormDB, dsn}, nil
+	return Database{gormDB, dsn, m}, nil
 }
 
 func (db Database) autoMigrate() error {

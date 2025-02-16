@@ -107,6 +107,19 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) MetricsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		stop := s.metrics.RecordDuration(s.metrics.HTTPRequestProcessingDuration, []string{c.Request.Method, c.Request.URL.Path})
+		s.metrics.RecordCount(s.metrics.HTTPRequestsReceived, []string{c.Request.Method, c.Request.URL.Path})
+		c.Next()
+
+		stop()
+		if c.Writer.Status() >= 500 {
+			s.metrics.RecordCount(s.metrics.InternalErrors, []string{strconv.Itoa(c.Writer.Status())})
+		}
+	}
+}
+
 // Helper functions
 func abortWithError(c *gin.Context, code int, msg string) {
 	c.AbortWithStatusJSON(code, gin.H{"error": msg})
