@@ -177,7 +177,7 @@ func main() {
 
 func startIndexers(ctx context.Context, f flags, db db.Database, rpcRmbClient *peer.RpcClient) {
 	gpuIdx := indexer.NewIndexer[types.NodeGPU](
-		indexer.NewGPUWork(f.gpuIndexerIntervalMins),
+		indexer.NewGPUWork(f.gpuIndexerIntervalMins, db),
 		"GPU",
 		db,
 		rpcRmbClient,
