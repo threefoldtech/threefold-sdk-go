@@ -8,7 +8,7 @@ type NodeGPU struct {
 	Vendor     string `json:"vendor"`
 	Device     string `json:"device"`
 	Contract   int    `json:"contract"`
-	UpdatedAt  int64  `json:"updated_at"`
+	UpdatedAt  int64  `json:"updated_at,omitempty"`
 }
 
 func (NodeGPU) TableName() string {
@@ -45,7 +45,7 @@ type Speed struct {
 	NodeTwinId uint32  `json:"node_twin_id,omitempty" gorm:"unique;not null"`
 	Upload     float64 `json:"upload"`   // in bit/sec
 	Download   float64 `json:"download"` // in bit/sec
-	UpdatedAt  int64
+	UpdatedAt  int64   `json:"updated_at,omitempty"`
 }
 
 func (Speed) TableName() string {
@@ -71,7 +71,7 @@ type Dmi struct {
 	Baseboard  Baseboard   `json:"baseboard" gorm:"type:jsonb;serializer:json"`
 	Processor  []Processor `json:"processor" gorm:"type:jsonb;serializer:json"`
 	Memory     []Memory    `json:"memory" gorm:"type:jsonb;serializer:json"`
-	UpdatedAt  int64
+	UpdatedAt  int64       `json:"updated_at,omitempty"`
 }
 
 func (Dmi) TableName() string {
@@ -100,7 +100,7 @@ type Memory struct {
 
 type NodeFeatures struct {
 	NodeTwinId uint32   `json:"node_twin_id,omitempty" gorm:"unique;not null"`
-	UpdatedAt  int64    `json:"updated_at"`
+	UpdatedAt  int64    `json:"updated_at,omitempty"`
 	Features   []string `json:"features" gorm:"type:jsonb;serializer:json"`
 }
 
