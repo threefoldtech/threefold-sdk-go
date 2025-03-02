@@ -457,27 +457,20 @@ $$
 BEGIN
     BEGIN
         UPDATE resources_cache
-        SET node_gpu_count = node_gpu_count + (
-            CASE 
-            WHEN TG_OP = 'INSERT' 
-                THEN 1 
-            WHEN TG_OP = 'DELETE'
-                THEN -1
-            ELSE 0
-            END
-        ),
-            gpus = (
-                SELECT json_agg(
-                    json_build_object(
-                        'id', node_gpu.id,
-                        'vendor', node_gpu.vendor,
-                        'device', node_gpu.device,
-                        'contract', node_gpu.contract
-                    )
+            SET node_gpu_count = gpu.count, gpus = gpu.gpus
+            FROM (
+              SELECT COUNT(*) AS count,
+                json_agg(
+                  json_build_object(
+                      'id', id,
+                      'vendor', vendor,
+                      'device', device,
+                      'contract', contract
                 )
-                from node_gpu where node_twin_id = COALESCE(NEW.node_twin_id, OLD.node_twin_id)
-            )
-
+              ) AS gpus
+              FROM node_gpu 
+              WHERE node_twin_id = COALESCE(NEW.node_twin_id, OLD.node_twin_id)
+            ) AS gpu
         WHERE resources_cache.node_id = (
             SELECT node_id from node where node.twin_id = COALESCE(NEW.node_twin_id, OLD.node_twin_id)
         );
@@ -490,7 +483,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER tg_node_gpu_count
-    AFTER INSERT OR DELETE ON node_gpu FOR EACH ROW
+    AFTER INSERT OR DELETE OR UPDATE ON node_gpu FOR EACH ROW
     EXECUTE PROCEDURE reflect_node_gpu_count_change();
 
 /*

@@ -4,6 +4,18 @@ Check `/version` on any instance to know the version.
 
 ## Releases
 
+### v0.16.4
+
+---
+
+- `fix` gpus number and list in node response
+
+### v0.16.2
+
+---
+
+- `feat` add openConnection on node stats 
+
 ### v0.16.0
 
 ---

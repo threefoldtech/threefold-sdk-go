@@ -16,14 +16,16 @@ const (
 
 type GPUWork struct {
 	findersInterval map[string]time.Duration
+	db              db.Database
 }
 
-func NewGPUWork(interval uint) *GPUWork {
+func NewGPUWork(interval uint, db db.Database) *GPUWork {
 	return &GPUWork{
 		findersInterval: map[string]time.Duration{
 			"up":  time.Duration(interval) * time.Minute,
 			"new": newNodesCheckInterval,
 		},
+		db: db,
 	}
 }
 
@@ -32,10 +34,18 @@ func (w *GPUWork) Finders() map[string]time.Duration {
 }
 
 func (w *GPUWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32) ([]types.NodeGPU, error) {
+	// in case an error returned? return directly we can leave the previously indexed cards
+	// in case null returned? we need to clean all previously added cards till now
+	// in case cards changed? Upsert() will take care of invalidating the old cards
+
 	var gpus []types.NodeGPU
-	err := callNode(ctx, rmb, gpuListCmd, nil, twinId, &gpus)
-	if err != nil {
+	if err := callNode(ctx, rmb, gpuListCmd, nil, twinId, &gpus); err != nil {
 		return gpus, err
+	}
+
+	before := time.Now().Unix()
+	if err := w.db.DeleteOldGpus(ctx, []uint32{twinId}, before); err != nil {
+		return gpus, fmt.Errorf("failed to remove old GPUs: %w", err)
 	}
 
 	for i := 0; i < len(gpus); i++ {
@@ -47,28 +57,21 @@ func (w *GPUWork) Get(ctx context.Context, rmb *peer.RpcClient, twinId uint32) (
 }
 
 func (w *GPUWork) Upsert(ctx context.Context, db db.Database, batch []types.NodeGPU) error {
-	expirationInterval := w.findersInterval["up"]
-	err := discardOldGpus(ctx, db, expirationInterval, batch)
-	if err != nil {
+	nodeTwinIds := []uint32{}
+	for _, gpu := range batch {
+		nodeTwinIds = append(nodeTwinIds, gpu.NodeTwinID)
+	}
+
+	// Invalidate old indexed GPUs for the same node, but first check the batch
+	// to avoid removing GPUs inserted in the last batch within the same indexer run.
+	before := time.Now().Add(-w.findersInterval["up"]).Unix()
+	if err := db.DeleteOldGpus(ctx, nodeTwinIds, before); err != nil {
 		return fmt.Errorf("failed to remove old GPUs: %w", err)
 	}
 
-	err = db.UpsertNodesGPU(ctx, batch)
-	if err != nil {
+	if err := db.UpsertNodesGPU(ctx, batch); err != nil {
 		return fmt.Errorf("failed to upsert new GPUs: %w", err)
 	}
 
 	return nil
-}
-
-func discardOldGpus(ctx context.Context, database db.Database, interval time.Duration, gpuBatch []types.NodeGPU) error {
-	// invalidate the old indexed GPUs for the same node,
-	// but check the batch first to ensure it does not contain related GPUs to node twin it from the last batch.
-	nodeTwinIds := []uint32{}
-	for _, gpu := range gpuBatch {
-		nodeTwinIds = append(nodeTwinIds, gpu.NodeTwinID)
-	}
-
-	expiration := time.Now().Unix() - int64(interval.Seconds())
-	return database.DeleteOldGpus(ctx, nodeTwinIds, expiration)
 }
