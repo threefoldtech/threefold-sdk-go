@@ -13,8 +13,8 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.4
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
-	gorm.io/driver/postgres v1.5.11
-	gorm.io/gorm v1.25.12
+	gorm.io/driver/postgres v1.5.7
+	gorm.io/gorm v1.25.10
 )
 
 require (
