@@ -89,24 +89,6 @@ CREATE TABLE public.contract_resources (
 ALTER TABLE public.contract_resources OWNER TO postgres;
 
 --
--- Name: country; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.country (
-    id character varying NOT NULL,
-    country_id integer NOT NULL,
-    code text NOT NULL,
-    name text NOT NULL,
-    region text NOT NULL,
-    subregion text NOT NULL,
-    lat text,
-    long text
-);
-
-
-ALTER TABLE public.country OWNER TO postgres;
-
---
 -- Name: entity; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -779,14 +761,6 @@ ALTER TABLE ONLY public.entity_proof
 
 
 --
--- Name: country PK_bf6e37c231c4f4ea56dcd887269; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.country
-    ADD CONSTRAINT "PK_bf6e37c231c4f4ea56dcd887269" PRIMARY KEY (id);
-
-
---
 -- Name: nru_consumption PK_ca7956fb8fcdb7198737387d9a8; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1122,5 +1096,18 @@ CREATE TABLE IF NOT EXISTS public.node_features (
 );
 
 ALTER TABLE public.node_features 
+    OWNER TO postgres;
+
+--
+-- Name: node_location; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS public.node_location (
+    country text NOT NULL,
+    continent text,
+    updated_at bigint
+);
+
+ALTER TABLE public.node_location 
     OWNER TO postgres;
 
