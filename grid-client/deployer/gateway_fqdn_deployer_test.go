@@ -126,7 +126,7 @@ func TestFQDNDeployer(t *testing.T) {
 	})
 
 	t.Run("test generate", func(t *testing.T) {
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(context.Background(), &gw)
 		assert.NoError(t, err)
 
 		testDl := workloads.NewGridDeployment(twinID, 0, []zosTypes.Workload{
@@ -151,7 +151,7 @@ func TestFQDNDeployer(t *testing.T) {
 	})
 
 	t.Run("test deploy", func(t *testing.T) {
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(context.Background(), &gw)
 		assert.NoError(t, err)
 
 		mockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl)
@@ -175,7 +175,7 @@ func TestFQDNDeployer(t *testing.T) {
 
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(context.Background(), &gw)
 		assert.NoError(t, err)
 
 		mockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl)
@@ -198,7 +198,7 @@ func TestFQDNDeployer(t *testing.T) {
 
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(context.Background(), &gw)
 		assert.NoError(t, err)
 
 		mockValidation(d.tfPluginClient.Identity, cl, sub, ncPool, proxyCl)
@@ -316,7 +316,7 @@ func TestFQDNDeployer(t *testing.T) {
 		gw.ContractID = contractID
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(context.Background(), &gw)
 		assert.NoError(t, err)
 
 		dl := dls[nodeID]
@@ -346,7 +346,7 @@ func TestFQDNDeployer(t *testing.T) {
 		gw.ContractID = contractID
 		gw.NodeDeploymentID = map[uint32]uint64{nodeID: contractID}
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), &gw)
+		dls, err := d.generateVersionlessDeployments(context.Background(), &gw)
 		assert.NoError(t, err)
 
 		dl := dls[nodeID]

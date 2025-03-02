@@ -100,4 +100,11 @@ var (
 		QaNetwork:   "https://kyc.qa.grid.tf",
 		MainNetwork: "https://kyc.grid.tf",
 	}
+
+	SentryDSN = map[string]string{
+		DevNetwork:  "https://af8a73b8282edc62c5b8bfa22da50acb@dev.sentry.grid.tf/4",
+		TestNetwork: "https://af8a73b8282edc62c5b8bfa22da50acb@dev.sentry.grid.tf/4",
+		QaNetwork:   "https://af8a73b8282edc62c5b8bfa22da50acb@dev.sentry.grid.tf/4",
+		MainNetwork: "https://b16d2b5fcfbc87234bc180a4c574b45f@sentry.grid.tf/3",
+	}
 )

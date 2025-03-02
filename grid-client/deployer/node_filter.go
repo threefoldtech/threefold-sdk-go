@@ -51,7 +51,7 @@ func FilterNodes(ctx context.Context, tfPlugin TFPluginClient, options types.Nod
 		requestedPages = requestedPagesPerIteration
 		totalPagesCount, err = getPagesCount(ctx, tfPlugin, options, limit)
 		if err != nil {
-			return []types.Node{}, err
+			return []types.Node{}, tfPlugin.sentry.error(err)
 		}
 	}
 
@@ -103,7 +103,7 @@ func FilterNodes(ctx context.Context, tfPlugin TFPluginClient, options types.Nod
 	}
 
 	if errs != nil {
-		return []types.Node{}, errors.Errorf("could not find enough nodes, found errors: %v", errs)
+		return []types.Node{}, tfPlugin.sentry.error(errors.Errorf("could not find enough nodes, found errors: %v", errs))
 	}
 
 	opts, err := serializeOptions(options)
@@ -199,7 +199,7 @@ func GetPublicNode(ctx context.Context, tfPlugin TFPluginClient, preferredNodes 
 		nil,
 		nil)
 	if err != nil {
-		return 0, err
+		return 0, tfPlugin.sentry.error(err)
 	}
 
 	// force add preferred nodes

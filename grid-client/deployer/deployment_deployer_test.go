@@ -353,7 +353,7 @@ func TestDeploymentDeployerDeploy(t *testing.T) {
 				return nil
 			}).AnyTimes()
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), []*workloads.Deployment{&dl})
+		dls, err := d.generateVersionlessDeployments(context.Background(), []*workloads.Deployment{&dl})
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(gridDl.Workloads), len(dls[dl.NodeID][0].Workloads))
@@ -528,7 +528,7 @@ func TestDeploymentDeployerSync(t *testing.T) {
 				return nil
 			})
 
-		dls, err := d.GenerateVersionlessDeployments(context.Background(), []*workloads.Deployment{&dl})
+		dls, err := d.generateVersionlessDeployments(context.Background(), []*workloads.Deployment{&dl})
 		assert.NoError(t, err)
 
 		gridDl := dls[dl.NodeID][0]

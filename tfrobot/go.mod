@@ -33,6 +33,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/ethereum/go-ethereum v1.11.6 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/getsentry/sentry-go v0.29.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
