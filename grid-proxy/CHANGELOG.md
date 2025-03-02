@@ -4,11 +4,12 @@ Check `/version` on any instance to know the version.
 
 ## Releases
 
-### v0.16.4
+### v0.16.5
 
 ---
 
 - `fix` gpus number and list in node response
+- `feat` add location indexer
 
 ### v0.16.2
 
